@@ -36,8 +36,8 @@ def laplacian_operator(lap: numpy.ndarray, flag_grid: numpy.ndarray, threshold: 
     # log the locations
     # if really desired, this could be done differently,
     # even though the locations are written as GeoPoints later on ...
-    for row, col in zip(*numpy.where(locations)):  # numpy.where is slow but fits the need
-        _LOG.info("laplacian operator check (#1)", row=row, col=col)
+    # for row, col in zip(*numpy.where(locations)):  # numpy.where is slow but fits the need
+    #     _LOG.info("laplacian operator check (#1)", row=row, col=col)
 
 
 def gaussian_curvature(
@@ -343,7 +343,7 @@ def adjacent_cells(
                 depth_neighbour = bathy[row + 1, col - 1]
 
                 if numpy.isnan(depth_neighbour) and (row < rows - 2) and col > 1:
-                    if flag_grid[r + 2, col - 2] != 0:
+                    if flag_grid[row + 2, col - 2] != 0:
                         continue
 
                     depth_neighbour = bathy[row + 2, col - 2]
@@ -381,15 +381,15 @@ def adjacent_cells(
             if pos_ratio >= thr:
                 flag_grid[row, col] = 3  # check #3
 
-                _LOG.info(
-                    "adjacency check #3",
-                    row=row,
-                    col=col,
-                    diff_pos_count=diff_pos_count,
-                    neighbour_count=neighbour_count,
-                    pos_ratio=pos_ratio,
-                    thr=thr,
-                )
+                # _LOG.info(
+                #     "adjacency check #3",
+                #     row=row,
+                #     col=col,
+                #     diff_pos_count=diff_pos_count,
+                #     neighbour_count=neighbour_count,
+                #     pos_ratio=pos_ratio,
+                #     thr=thr,
+                # )
 
                 continue
 
@@ -397,15 +397,15 @@ def adjacent_cells(
             if neg_ratio >= thr:
                 flag_grid[row, col] = 3  # check #3
 
-                _LOG.info(
-                    "adjacency check #3",
-                    row=row,
-                    col=col,
-                    diff_neg_count=diff_neg_count,
-                    neighbour_count=neighbour_count,
-                    neg_ratio=neg_ratio,
-                    thr=thr,
-                )
+                # _LOG.info(
+                #     "adjacency check #3",
+                #     row=row,
+                #     col=col,
+                #     diff_neg_count=diff_neg_count,
+                #     neighbour_count=neighbour_count,
+                #     neg_ratio=neg_ratio,
+                #     thr=thr,
+                # )
 
                 continue
 
@@ -517,7 +517,7 @@ def noisy_edges(bathy: numpy.ndarray, flag_grid: numpy.ndarray, dist: int, cf: f
 
             depth_neighbour = bathy[row - 1, col]
 
-            if numpy.isnan(depth_neighbour) and r > 1:
+            if numpy.isnan(depth_neighbour) and row > 1:
                 if flag_grid[row - 2, col] != 0:
                     continue
 
@@ -717,15 +717,15 @@ def noisy_edges(bathy: numpy.ndarray, flag_grid: numpy.ndarray, dist: int, cf: f
             if max_diff > cf * threshold:
                 flag_grid[row, col] = 6  # check #6
 
-                _LOG.info(
-                    "noisy neighbour (check #6)",
-                    row=row,
-                    col=col,
-                    neighbour_count=neighbour_count,
-                    max_diff=max_diff,
-                    min_depth=min_depth,
-                    threshold=threshold,
-                )
+                # _LOG.info(
+                #     "noisy neighbour (check #6)",
+                #     row=row,
+                #     col=col,
+                #     neighbour_count=neighbour_count,
+                #     max_diff=max_diff,
+                #     min_depth=min_depth,
+                #     threshold=threshold,
+                # )
 
 
 @jit(nopython=True, cache=True)
