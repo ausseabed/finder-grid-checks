@@ -29,6 +29,9 @@ class FliersCheck(GridCheck):
     input_params = [
         QajsonParam("Noisy Edges - dist", 2),
         QajsonParam("Noisy Edges - cf", 1.0),
+        QajsonParam("Adjacent Cells - threshold", 2.0),
+        QajsonParam("Adjacent Cells - percent 1", 20.0),
+        QajsonParam("Adjacent Cells - percent 2", 20.0),
     ]
 
     def __init__(self, input_params: List[QajsonParam]):
@@ -37,6 +40,10 @@ class FliersCheck(GridCheck):
         self._ne_dist = self.get_param('Noisy Edges - dist')
         self._ne_cf = self.get_param('Noisy Edges - cf')
 
+        self._ac_threshold = self.get_param('Adjacent Cells - threshold')
+        self._ac_pc1 = self.get_param('Adjacent Cells - percent 1')
+        self._ac_pc2 = self.get_param('Adjacent Cells - percent 2')
+
         self.geojson_points = []
 
     def merge_results(self, last_check: GridCheck):
@@ -44,6 +51,7 @@ class FliersCheck(GridCheck):
 
         self.total_cell_count += last_check.total_cell_count
         self.failed_cell_count_noisy_edges += last_check.failed_cell_count_noisy_edges
+        self.failed_cell_adjacent_cells += last_check.failed_cell_adjacent_cells
 
         self.geojson_points.extend(last_check.geojson_points)
 
@@ -68,8 +76,16 @@ class FliersCheck(GridCheck):
         depth_clone.fill_value = np.NaN
         depth_clone = depth_clone.filled()
 
-        print(depth_clone)
+        # run adjacent cells check
+        fliers.adjacent_cells(
+            depth_clone,
+            flag_grid,
+            threshold=self._ac_threshold,
+            percent_1=self._ac_pc1,
+            percent_2=self._ac_pc2
+        )
 
+        # run noisy edges check
         fliers.noisy_edges(
             depth_clone,
             flag_grid,
@@ -77,6 +93,8 @@ class FliersCheck(GridCheck):
             cf=self._ne_cf
         )
 
+        # adjacent cells uses 6 as its flag value
+        self.failed_cell_adjacent_cells = np.count_nonzero(flag_grid == 3)
         # noisy edges uses 6 as its flag value
         self.failed_cell_count_noisy_edges = np.count_nonzero(flag_grid == 6)
 
@@ -127,7 +145,8 @@ class FliersCheck(GridCheck):
         )
 
         data = {
-            "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges
+            "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges,
+            "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells
         }
 
         map_feature = geojson.FeatureCollection(self.geojson_points)
