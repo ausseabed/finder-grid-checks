@@ -114,8 +114,7 @@ class FliersCheck(GridCheck):
         self.geojson_points = []
 
         # get locations of all nodes that have failed one of the flier checks
-        failed_cells = np.where(flag_grid > 0)
-        failed_cell_indicies = list(zip(failed_cells[0], failed_cells[1]))
+        failed_cell_indicies = np.argwhere(flag_grid > 0)
         # iterate through each one and create a point feature
         for row, col in failed_cell_indicies:
             flag = flag_grid[row][col]
