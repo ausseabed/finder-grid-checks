@@ -29,7 +29,19 @@ def laplacian_operator(lap: numpy.ndarray, flag_grid: numpy.ndarray, threshold: 
     #     th = 5
     #     would result in the entire array being true.
     #     Is this the intended behaviour???
-    locations = numexpr.evaluate("(lap < threshold) | (lap > -threshold)")
+    # The following line seems to only produce correct results with a negative
+    # threshold value.
+    # locations = numexpr.evaluate("(lap < threshold) | (lap > -threshold)")
+
+    # The folling quote is taken from the QC Tools documentation
+    # |  The Laplacian Operator is a measure of curvature at each node. It is
+    # |  equivalent to summing the depth gradients of the four nodes adjacent
+    # |  (north, south, east, and west) to each node. If the absolute value of
+    # |  the Laplacian Operator is greater than four times the flier search
+    # |  height, the node will be flagged.
+    # Therefore the implementation was changed to that below
+    lap_abs = numpy.abs(lap)
+    locations = numexpr.evaluate("lap_abs > threshold")
 
     flag_grid[locations] = 1  # check number 1
 
