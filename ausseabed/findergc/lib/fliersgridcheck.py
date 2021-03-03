@@ -1,18 +1,18 @@
+from affine import Affine
+from osgeo import gdal, ogr, osr
+from scipy import ndimage
 from typing import Optional, Dict, List, Any
-from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
-from ausseabed.mbesgc.lib.data import InputFileDetails
-from ausseabed.mbesgc.lib.tiling import Tile
-
 import collections
+import geojson
 import numpy as np
 import numpy.ma as ma
-import geojson
 
-from osgeo import gdal, ogr, osr
-from affine import Affine
-
+from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState, \
     GridCheckResult
+from ausseabed.mbesgc.lib.tiling import Tile
+from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
+
 from ausseabed.findergc.lib import fliers
 
 
@@ -27,6 +27,7 @@ class FliersCheck(GridCheck):
 
     # default values taken from IHO - 1a spec
     input_params = [
+        QajsonParam("Laplacian Operator - threshold", 1.0),
         QajsonParam("Noisy Edges - dist", 2),
         QajsonParam("Noisy Edges - cf", 1.0),
         QajsonParam("Adjacent Cells - threshold", 2.0),
@@ -36,6 +37,9 @@ class FliersCheck(GridCheck):
 
     def __init__(self, input_params: List[QajsonParam]):
         super().__init__(input_params)
+
+        self.laplace_threshold = self.get_param(
+            'Laplacian Operator - threshold')
 
         self._ne_dist = self.get_param('Noisy Edges - dist')
         self._ne_cf = self.get_param('Noisy Edges - cf')
@@ -50,6 +54,7 @@ class FliersCheck(GridCheck):
         self.start_time = last_check.start_time
 
         self.total_cell_count += last_check.total_cell_count
+        self.failed_cell_laplacian_operator += self.failed_cell_laplacian_operator
         self.failed_cell_count_noisy_edges += last_check.failed_cell_count_noisy_edges
         self.failed_cell_adjacent_cells += last_check.failed_cell_adjacent_cells
 
@@ -65,6 +70,8 @@ class FliersCheck(GridCheck):
             progress_callback=None):
         # run check on tile data
 
+        self.total_cell_count = int(depth.count())
+
         flag_grid = np.full(
             depth.shape,
             0,
@@ -75,6 +82,14 @@ class FliersCheck(GridCheck):
 
         depth_clone.fill_value = np.NaN
         depth_clone = depth_clone.filled()
+
+        # run the laplacian operator check
+        depth_laplace = ndimage.filters.laplace(depth_clone)
+        fliers.laplacian_operator(
+            depth_laplace,
+            flag_grid,
+            threshold=self.laplace_threshold
+        )
 
         # run adjacent cells check
         fliers.adjacent_cells(
@@ -93,6 +108,30 @@ class FliersCheck(GridCheck):
             cf=self._ne_cf
         )
 
+        # tf = '/Users/lachlan/work/projects/qa4mb/repo/finder-grid-checks/au2.tif'
+        # tile_ds = gdal.GetDriverByName('GTiff').Create(
+        #     tf,
+        #     tile.max_x - tile.min_x,
+        #     tile.max_y - tile.min_y,
+        #     1,
+        #     gdal.GDT_Float32
+        # )
+        # src_affine = Affine.from_gdal(*ifd.geotransform)
+        # tile_affine = src_affine * Affine.translation(
+        #     tile.min_x,
+        #     tile.min_y
+        # )
+        # tile_ds.SetGeoTransform(tile_affine.to_gdal())
+        #
+        # tile_band = tile_ds.GetRasterBand(1)
+        # tile_band.WriteArray(depth_laplace, 0, 0)
+        # tile_band.SetNoDataValue(0)
+        # tile_band.FlushCache()
+        # tile_ds.SetProjection(ifd.projection)
+
+
+        # laplacian_operator check uses 1 as its flag value
+        self.failed_cell_laplacian_operator = np.count_nonzero(flag_grid == 1)
         # adjacent cells uses 6 as its flag value
         self.failed_cell_adjacent_cells = np.count_nonzero(flag_grid == 3)
         # noisy edges uses 6 as its flag value
@@ -144,8 +183,10 @@ class FliersCheck(GridCheck):
         )
 
         data = {
+            "failed_cell_laplacian_operator": self.failed_cell_laplacian_operator,
             "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges,
-            "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells
+            "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells,
+            "total_cell_count": self.total_cell_count
         }
 
         map_feature = geojson.FeatureCollection(self.geojson_points)
