@@ -68,8 +68,8 @@ def gaussian_curvature(
     locations = gauss_curve > threshold
     flag_grid[locations] = 2  # check number 2
 
-    for row, col in zip(*numpy.where(locations)):
-        _LOG.info("gaussian curvature check (#2)", row=row, col=col)
+    # for row, col in zip(*numpy.where(locations)):
+    #     _LOG.info("gaussian curvature check (#2)", row=row, col=col)
 
 
 @jit(nopython=True, cache=True)
