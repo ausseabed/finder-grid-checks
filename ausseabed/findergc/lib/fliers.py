@@ -850,7 +850,7 @@ def _small_groups(
                             abs(bathy[row, col] - bathy[nb_rs[ni], nb_cs[ni]]) > th
                         ) and check_slivers:
                             flag_grid[row, col] = 4  # check #4
-                            _LOG.info("check (#4)", ni=ni + 1, row=row, col=col)
+                            # _LOG.info("check (#4)", ni=ni + 1, row=row, col=col)
                         break
 
                 if find:
@@ -869,7 +869,7 @@ def _small_groups(
             if (conn_count == 0) and check_isolated:
                 flag_grid[last_row, last_col] = 5  # check #5
 
-                _LOG.info("isolated group (#5)", last_row=last_row, last_col=last_col)
+                # _LOG.info("isolated group (#5)", last_row=last_row, last_col=last_col)
 
 
 def small_groups(
