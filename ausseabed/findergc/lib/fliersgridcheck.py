@@ -34,6 +34,10 @@ class FliersCheck(GridCheck):
         QajsonParam("Adjacent Cells - threshold", 2.0),
         QajsonParam("Adjacent Cells - percent 1", 20.0),
         QajsonParam("Adjacent Cells - percent 2", 20.0),
+        QajsonParam("Small Groups - threshold", 1.0),
+        QajsonParam("Small Groups - area limit", 1.0),
+        QajsonParam("Small Groups - check slivers", True),
+        QajsonParam("Small Groups - check isolated", True)
     ]
 
     def __init__(self, input_params: List[QajsonParam]):
@@ -51,6 +55,11 @@ class FliersCheck(GridCheck):
         self._ac_pc1 = self.get_param('Adjacent Cells - percent 1')
         self._ac_pc2 = self.get_param('Adjacent Cells - percent 2')
 
+        self._sg_threshold = self.get_param('Small Groups - threshold')
+        self._sg_area_limit = self.get_param('Small Groups - area limit')
+        self._sg_check_slivers = self.get_param('Small Groups - check slivers')
+        self._sg_check_isolated = self.get_param('Small Groups - check isolated')
+
         self.geojson_points = []
 
     def merge_results(self, last_check: GridCheck):
@@ -61,6 +70,8 @@ class FliersCheck(GridCheck):
         self.failed_cell_gaussian_curvature += self.failed_cell_gaussian_curvature
         self.failed_cell_count_noisy_edges += last_check.failed_cell_count_noisy_edges
         self.failed_cell_adjacent_cells += last_check.failed_cell_adjacent_cells
+        self.failed_cell_isolated_group += last_check.failed_cell_isolated_group
+        self.failed_cell_sliver += last_check.failed_cell_sliver
 
         self.geojson_points.extend(last_check.geojson_points)
 
@@ -126,6 +137,19 @@ class FliersCheck(GridCheck):
             cf=self._ne_cf
         )
 
+        # run small groups check
+        grid_bin = np.isfinite(depth_clone)
+        fliers.small_groups(
+            grid_bin=grid_bin,
+            bathy=depth_clone,
+            flag_grid=flag_grid,
+            th=self._sg_threshold,
+            area_limit=self._sg_area_limit,
+            check_slivers=self._sg_check_slivers,
+            check_isolated=self._sg_check_isolated
+        )
+
+
         # tf = '/Users/lachlan/work/projects/qa4mb/repo/finder-grid-checks/au3.tif'
         # tile_ds = gdal.GetDriverByName('GTiff').Create(
         #     tf,
@@ -149,10 +173,14 @@ class FliersCheck(GridCheck):
 
         # laplacian_operator check uses 1 as its flag value
         self.failed_cell_laplacian_operator = np.count_nonzero(flag_grid == 1)
-        # gaussian_curvature check uses 1 as its flag value
+        # gaussian_curvature check uses 2 as its flag value
         self.failed_cell_gaussian_curvature = np.count_nonzero(flag_grid == 2)
-        # adjacent cells uses 6 as its flag value
+        # adjacent cells uses 3 as its flag value
         self.failed_cell_adjacent_cells = np.count_nonzero(flag_grid == 3)
+        # slivers uses 4 as its flag value
+        self.failed_cell_sliver = np.count_nonzero(flag_grid == 4)
+        # isolated group uses 5 as its flag value
+        self.failed_cell_isolated_group = np.count_nonzero(flag_grid == 5)
         # noisy edges uses 6 as its flag value
         self.failed_cell_count_noisy_edges = np.count_nonzero(flag_grid == 6)
 
@@ -206,7 +234,8 @@ class FliersCheck(GridCheck):
             "failed_cell_gaussian_curvature": self.failed_cell_gaussian_curvature,
             "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges,
             "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells,
-            "total_cell_count": self.total_cell_count
+            "failed_cell_sliver": self.failed_cell_sliver,
+            "failed_cell_isolated_group": self.failed_cell_isolated_group
         }
 
         map_feature = geojson.FeatureCollection(self.geojson_points)
