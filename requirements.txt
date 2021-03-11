@@ -5,7 +5,7 @@ affine==2.3.0
 pytest
 pytest-cov
 git+git://github.com/ausseabed/qajson.git@master#egg=ausseabed.qajson
-git+git://github.com/ausseabed/findergc.git@main#egg=ausseabed.findergc
+git+git://github.com/ausseabed/mbes-grid-checks.git@master#egg=ausseabed.mbesgc
 
 click==7.1.2
 structlog==21.1.0
