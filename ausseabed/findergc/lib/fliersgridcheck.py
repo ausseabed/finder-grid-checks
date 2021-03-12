@@ -149,7 +149,6 @@ class FliersCheck(GridCheck):
             check_isolated=self._sg_check_isolated
         )
 
-
         # tf = '/Users/lachlan/work/projects/qa4mb/repo/finder-grid-checks/au3.tif'
         # tile_ds = gdal.GetDriverByName('GTiff').Create(
         #     tf,
@@ -177,10 +176,12 @@ class FliersCheck(GridCheck):
         self.failed_cell_gaussian_curvature = np.count_nonzero(flag_grid == 2)
         # adjacent cells uses 3 as its flag value
         self.failed_cell_adjacent_cells = np.count_nonzero(flag_grid == 3)
-        # slivers uses 4 as its flag value
-        self.failed_cell_sliver = np.count_nonzero(flag_grid == 4)
-        # isolated group uses 5 as its flag value
-        self.failed_cell_isolated_group = np.count_nonzero(flag_grid == 5)
+        if self._sg_check_slivers:
+            # slivers uses 4 as its flag value
+            self.failed_cell_sliver = np.count_nonzero(flag_grid == 4)
+        if self._sg_check_isolated:
+            # isolated group uses 5 as its flag value
+            self.failed_cell_isolated_group = np.count_nonzero(flag_grid == 5)
         # noisy edges uses 6 as its flag value
         self.failed_cell_count_noisy_edges = np.count_nonzero(flag_grid == 6)
 
@@ -220,6 +221,26 @@ class FliersCheck(GridCheck):
             )
             self.geojson_points.append(feature)
 
+    def __get_messages_from_data(self, data, total_cells, total_failed_cells):
+        ''' Generates a human readable summary of the data dict that is
+        populated with failed check counts.
+        '''
+        start_str = 'failed_cell_'
+        messages = []
+        pc_fail = total_failed_cells / total_cells * 100.0
+        messages.append(
+            f"{total_failed_cells} nodes failed the flier finders check, this "
+            f"represents {pc_fail:.1f}% of all nodes."
+        )
+        for key, value in data.items():
+            if key.startswith(start_str) and value > 0:
+                pc_fail_loc = value / total_cells * 100.0
+                quant = key[len(start_str):].replace('_', ' ')
+                str = f"   {value} nodes failed {quant} ({pc_fail_loc:.2f}%)"
+                messages.append(str)
+
+        return messages
+
     def get_outputs(self) -> QajsonOutputs:
 
         execution = QajsonExecution(
@@ -234,21 +255,45 @@ class FliersCheck(GridCheck):
             "failed_cell_gaussian_curvature": self.failed_cell_gaussian_curvature,
             "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges,
             "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells,
-            "failed_cell_sliver": self.failed_cell_sliver,
-            "failed_cell_isolated_group": self.failed_cell_isolated_group
+            "total_cell_count": self.total_cell_count
         }
 
-        map_feature = geojson.FeatureCollection(self.geojson_points)
-        map = geojson.mapping.to_mapping(map_feature)
+        total_failed = sum([
+            self.failed_cell_laplacian_operator,
+            self.failed_cell_gaussian_curvature,
+            self.failed_cell_count_noisy_edges,
+            self.failed_cell_adjacent_cells
+        ])
 
-        data['map'] = map
+        if self._sg_check_slivers:
+            data["failed_cell_sliver"] = self.failed_cell_sliver
+            total_failed += self.failed_cell_sliver
+        if self._sg_check_isolated:
+            data["failed_cell_isolated_group"] = self.failed_cell_isolated_group
+            total_failed += self.failed_cell_isolated_group
+
+        if total_failed > 0:
+            check_state = GridCheckState.cs_fail
+
+            map_feature = geojson.FeatureCollection(self.geojson_points)
+            map = geojson.mapping.to_mapping(map_feature)
+            data['map'] = map
+
+            messages = self.__get_messages_from_data(
+                data,
+                self.total_cell_count,
+                total_failed
+            )
+        else:
+            check_state = GridCheckState.cs_pass
+            messages = []
 
         return QajsonOutputs(
             execution=execution,
             files=None,
             count=None,
             percentage=None,
-            messages=[],
+            messages=messages,
             data=data,
-            check_state=GridCheckState.cs_pass
+            check_state=check_state
         )
