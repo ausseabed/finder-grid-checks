@@ -35,7 +35,6 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         # name of the check tool
         self.name = 'Finder Grid Checks'
         self._check_references = self._build_check_references()
-        self.stopped = False
 
         self.exe = None
 
@@ -73,16 +72,13 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
     def run(
             self,
             qajson: QajsonRoot,
-            progress_callback: Callable = None
-            ) -> NoReturn:
-        self.stopped = False
-
+            progress_callback: Callable = None,
+            qajson_update_callback: Callable = None,
+            is_stopped: Callable = None
+    ) -> NoReturn:
         grid_data_checks = qajson.qa.survey_products.checks
         ifd_list = inputs_from_qajson_checks(grid_data_checks)
         file_count = len(ifd_list)
-
-        print("all_checks")
-        print(all_checks)
 
         self.exe = Executor(ifd_list, all_checks)
 
@@ -92,13 +88,18 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         def pg_call(check_runner_progress):
             progress_callback(self, check_runner_progress)
 
-        self.exe.run(pg_call)
+        self.exe.run(pg_call, qajson_update_callback, is_stopped)
 
         for (ifd, check_id), check in self.exe.check_result_cache.items():
             check_outputs = check.get_outputs()
 
             ifd.qajson_check.outputs = check_outputs
 
+        # Findergc runs all checks over each tile of an input file, therefore
+        # it's only possible to update the qajson once all checks have been
+        # completed.
+        if qajson_update_callback is not None:
+            qajson_update_callback()
 
         # # the checks runner produces an array containing a listof checks
         # # each check being a dictionary. Deserialise these using the qa json
@@ -134,11 +135,6 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         #     # replace the input qajson check outputs with the output generated
         #     # by the check_runner
         #     in_check.outputs = out_check.outputs
-
-    def stop(self):
-        self.stopped = True
-        if self.exe is not None:
-            self.exe.stop()
 
     def update_qa_json_input_files(
             self, qa_json: QajsonRoot, files: List[Path]) -> NoReturn:
