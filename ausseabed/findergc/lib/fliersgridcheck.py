@@ -29,7 +29,7 @@ class FliersCheck(GridCheck):
     input_params = [
         QajsonParam("Laplacian Operator - threshold", 1.0),
         QajsonParam("Gaussian Curvature - threshold", 1.0),
-        QajsonParam("Noisy Edges - dist", 2),
+        QajsonParam("Noisy Edges - dist", 2.0),
         QajsonParam("Noisy Edges - cf", 1.0),
         QajsonParam("Adjacent Cells - threshold", 2.0),
         QajsonParam("Adjacent Cells - percent 1", 20.0),
@@ -58,7 +58,8 @@ class FliersCheck(GridCheck):
         self._sg_threshold = self.get_param('Small Groups - threshold')
         self._sg_area_limit = self.get_param('Small Groups - area limit')
         self._sg_check_slivers = self.get_param('Small Groups - check slivers')
-        self._sg_check_isolated = self.get_param('Small Groups - check isolated')
+        self._sg_check_isolated = self.get_param(
+            'Small Groups - check isolated')
 
         self.geojson_points = []
 
@@ -112,7 +113,8 @@ class FliersCheck(GridCheck):
         gy, gx = np.gradient(dtm_mask)
         gxy, gxx = np.gradient(gx)
         gyy, _ = np.gradient(gy)
-        gauss_curv = (gxx * gyy - (gxy ** 2)) / (1 + (gx ** 2) + (gy ** 2)) ** 2
+        gauss_curv = (gxx * gyy - (gxy ** 2)) / \
+            (1 + (gx ** 2) + (gy ** 2)) ** 2
 
         fliers.gaussian_curvature(
             gauss_curv,
