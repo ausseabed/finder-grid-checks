@@ -88,6 +88,15 @@ class FliersCheck(GridCheck):
 
         self.total_cell_count = int(depth.count())
 
+        if self.total_cell_count == 0:
+            self.failed_cell_laplacian_operator = 0
+            self.failed_cell_gaussian_curvature = 0
+            self.failed_cell_count_noisy_edges = 0
+            self.failed_cell_adjacent_cells = 0
+            self.failed_cell_isolated_group = 0
+            self.failed_cell_sliver = 0
+            return
+
         flag_grid = np.full(
             depth.shape,
             0,
