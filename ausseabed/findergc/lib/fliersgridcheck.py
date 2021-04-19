@@ -168,7 +168,7 @@ class FliersCheck(GridCheck):
             check_isolated=self._sg_check_isolated
         )
 
-        # tf = '/Users/lachlan/work/projects/qa4mb/repo/finder-grid-checks/au3.tif'
+        # tf = f"Z:/work/projects/qa4mb/repo/finder-grid-checks/lap_{tile.min_x}_{tile.min_y}.tif"
         # tile_ds = gdal.GetDriverByName('GTiff').Create(
         #     tf,
         #     tile.max_x - tile.min_x,
@@ -184,7 +184,7 @@ class FliersCheck(GridCheck):
         # tile_ds.SetGeoTransform(tile_affine.to_gdal())
         #
         # tile_band = tile_ds.GetRasterBand(1)
-        # tile_band.WriteArray(gauss_curv, 0, 0)
+        # tile_band.WriteArray(np.abs(depth_laplace), 0, 0)
         # tile_band.SetNoDataValue(0)
         # tile_band.FlushCache()
         # tile_ds.SetProjection(ifd.projection)
