@@ -67,8 +67,8 @@ class FliersCheck(GridCheck):
         self.start_time = last_check.start_time
 
         self.total_cell_count += last_check.total_cell_count
-        self.failed_cell_laplacian_operator += self.failed_cell_laplacian_operator
-        self.failed_cell_gaussian_curvature += self.failed_cell_gaussian_curvature
+        self.failed_cell_laplacian_operator += last_check.failed_cell_laplacian_operator
+        self.failed_cell_gaussian_curvature += last_check.failed_cell_gaussian_curvature
         self.failed_cell_count_noisy_edges += last_check.failed_cell_count_noisy_edges
         self.failed_cell_adjacent_cells += last_check.failed_cell_adjacent_cells
         self.failed_cell_isolated_group += last_check.failed_cell_isolated_group
