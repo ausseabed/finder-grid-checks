@@ -61,6 +61,11 @@ class FliersCheck(GridCheck):
         self._sg_check_isolated = self.get_param(
             'Small Groups - check isolated')
 
+        # maximium number of points that will be included in the spatial outputs
+        # doesn't change reported stats, only what is diplayed in map widget
+        # per tile number, so total number across all tiles can be much larger
+        self.max_geojson_points = 1000
+        self.max_geojson_points_exceeded = False
         self.geojson_points = []
 
     def merge_results(self, last_check: GridCheck):
@@ -76,6 +81,9 @@ class FliersCheck(GridCheck):
 
         self.geojson_points.extend(last_check.geojson_points)
 
+        self.max_geojson_points_exceeded = (
+            self.max_geojson_points_exceeded or last_check.max_geojson_points_exceeded)
+
     def run(
             self,
             ifd: InputFileDetails,
@@ -85,7 +93,7 @@ class FliersCheck(GridCheck):
             uncertainty,
             progress_callback=None):
         # run check on tile data
-
+        self.max_geojson_points_exceeded = False
         self.total_cell_count = int(depth.count())
 
         if self.total_cell_count == 0:
@@ -220,8 +228,16 @@ class FliersCheck(GridCheck):
 
         # get locations of all nodes that have failed one of the flier checks
         failed_cell_indicies = np.argwhere(flag_grid > 0)
+
+        failed_point_count = 0
         # iterate through each one and create a point feature
         for row, col in failed_cell_indicies:
+            if failed_point_count > self.max_geojson_points:
+                # qajson gets large if too many points are included in the output.
+                # So limit the maximum anount of points. This doesnt effect the
+                # reported stats, only what is shown in the map widget.
+                self.max_geojson_points_exceeded = True
+                break
             flag = flag_grid[row][col]
 
             x = origin_x + pixel_width * col
@@ -238,6 +254,8 @@ class FliersCheck(GridCheck):
                 }
             )
             self.geojson_points.append(feature)
+
+            failed_point_count += 1
 
     def __get_messages_from_data(self, data, total_cells, total_failed_cells):
         ''' Generates a human readable summary of the data dict that is
@@ -305,6 +323,12 @@ class FliersCheck(GridCheck):
         else:
             check_state = GridCheckState.cs_pass
             messages = []
+
+        if self.max_geojson_points_exceeded:
+            messages.append(
+                "Warning: maximum number of viewable points was "
+                "exceeded. Not all failed points will be displayed "
+                "in the map view and qajson.")
 
         return QajsonOutputs(
             execution=execution,
