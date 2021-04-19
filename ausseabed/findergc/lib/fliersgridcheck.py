@@ -196,12 +196,19 @@ class FliersCheck(GridCheck):
         # noisy edges uses 6 as its flag value
         self.failed_cell_count_noisy_edges = np.count_nonzero(flag_grid == 6)
 
+        src_affine = Affine.from_gdal(*ifd.geotransform)
+        tile_affine = src_affine * Affine.translation(
+            tile.min_x,
+            tile.min_y
+        )
+        geotransform = tile_affine.to_gdal()
+
         # use the details of the raster's geotransform to translate from
         # pixel coords to the rasters coord system
-        origin_x = ifd.geotransform[0]
-        origin_y = ifd.geotransform[3]
-        pixel_width = ifd.geotransform[1]
-        pixel_height = ifd.geotransform[5]
+        origin_x = geotransform[0]
+        origin_y = geotransform[3]
+        pixel_width = geotransform[1]
+        pixel_height = geotransform[5]
 
         src_proj = osr.SpatialReference()
         src_proj.ImportFromWkt(ifd.projection)
