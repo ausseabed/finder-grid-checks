@@ -23,6 +23,12 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
             icon="tif.png"
         ),
         QaxFileType(
+            name="GeoTIFF",
+            extension="tif",
+            group="Survey DTMs",
+            icon="tif.png"
+        ),
+        QaxFileType(
             name="BAG file",
             extension="bag",
             group="Survey DTMs",
