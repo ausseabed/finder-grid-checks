@@ -84,6 +84,8 @@ class FliersCheck(GridCheck):
         self.max_geojson_points_exceeded = (
             self.max_geojson_points_exceeded or last_check.max_geojson_points_exceeded)
 
+        self._merge_temp_dirs(last_check)
+
     def run(
             self,
             ifd: InputFileDetails,
@@ -108,7 +110,7 @@ class FliersCheck(GridCheck):
         flag_grid = np.full(
             depth.shape,
             0,
-            dtype=np.int
+            dtype=np.int16
         )
 
         depth_clone = depth.copy()
@@ -204,6 +206,11 @@ class FliersCheck(GridCheck):
         # noisy edges uses 6 as its flag value
         self.failed_cell_count_noisy_edges = np.count_nonzero(flag_grid == 6)
 
+        if not (self.spatial_export or self.spatial_export_location):
+            # if we don't generate spatial outputs, then there's no
+            # need to do any further processing
+            return
+
         src_affine = Affine.from_gdal(*ifd.geotransform)
         tile_affine = src_affine * Affine.translation(
             tile.min_x,
@@ -226,36 +233,61 @@ class FliersCheck(GridCheck):
 
         self.geojson_points = []
 
-        # get locations of all nodes that have failed one of the flier checks
-        failed_cell_indicies = np.argwhere(flag_grid > 0)
+        if self.spatial_qajson:
+            # get locations of all nodes that have failed one of the flier
+            # checks
+            failed_cell_indicies = np.argwhere(flag_grid > 0)
 
-        failed_point_count = 0
-        # iterate through each one and create a point feature
-        for row, col in failed_cell_indicies:
-            if failed_point_count > self.max_geojson_points:
-                # qajson gets large if too many points are included in the output.
-                # So limit the maximum anount of points. This doesnt effect the
-                # reported stats, only what is shown in the map widget.
-                self.max_geojson_points_exceeded = True
-                break
-            flag = flag_grid[row][col]
+            failed_point_count = 0
+            # iterate through each one and create a point feature
+            for row, col in failed_cell_indicies:
+                if failed_point_count > self.max_geojson_points:
+                    # qajson gets large if too many points are included in the output.
+                    # So limit the maximum anount of points. This doesnt effect the
+                    # reported stats, only what is shown in the map widget.
+                    self.max_geojson_points_exceeded = True
+                    break
+                flag = flag_grid[row][col]
 
-            x = origin_x + pixel_width * col
-            y = origin_y + pixel_height * row
+                x = origin_x + pixel_width * col
+                y = origin_y + pixel_height * row
 
-            # now reproject into 4326 as required by geojson
-            x, y = coord_trans.TransformPoint(x, y, 0.0)[:2]
+                # now reproject into 4326 as required by geojson
+                x, y = coord_trans.TransformPoint(x, y, 0.0)[:2]
 
-            pt = geojson.Point([x, y])
-            feature = geojson.Feature(
-                geometry=pt,
-                properties={
-                    'flag': int(flag)
-                }
-            )
-            self.geojson_points.append(feature)
+                pt = geojson.Point([x, y])
+                feature = geojson.Feature(
+                    geometry=pt,
+                    properties={
+                        'flag': int(flag)
+                    }
+                )
+                self.geojson_points.append(feature)
 
-            failed_point_count += 1
+                failed_point_count += 1
+
+            if self.spatial_export:
+
+                tf = self._get_tmp_file('fliers', 'tif', tile)
+                tile_ds = gdal.GetDriverByName('GTiff').Create(
+                    tf,
+                    tile.max_x - tile.min_x,
+                    tile.max_y - tile.min_y,
+                    1,
+                    gdal.GDT_Int16,
+                    options=['COMPRESS=DEFLATE']
+                )
+
+                tile_ds.SetGeoTransform(tile_affine.to_gdal())
+
+                tile_band = tile_ds.GetRasterBand(1)
+                tile_band.WriteArray(flag_grid, 0, 0)
+                tile_band.SetNoDataValue(0)
+                tile_band.FlushCache()
+                tile_ds.SetProjection(ifd.projection)
+                tile_ds = None
+
+                self._move_tmp_dir()
 
     def __get_messages_from_data(self, data, total_cells, total_failed_cells):
         ''' Generates a human readable summary of the data dict that is
@@ -310,10 +342,10 @@ class FliersCheck(GridCheck):
 
         if total_failed > 0:
             check_state = GridCheckState.cs_fail
-
-            map_feature = geojson.FeatureCollection(self.geojson_points)
-            map = geojson.mapping.to_mapping(map_feature)
-            data['map'] = map
+            if self.spatial_qajson:
+                map_feature = geojson.FeatureCollection(self.geojson_points)
+                map = geojson.mapping.to_mapping(map_feature)
+                data['map'] = map
 
             messages = self.__get_messages_from_data(
                 data,
