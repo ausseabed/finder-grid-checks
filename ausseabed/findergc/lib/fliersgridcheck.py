@@ -268,6 +268,44 @@ class FliersCheck(GridCheck):
 
         if self.spatial_export:
 
+            lap_f = self._get_tmp_file('laplace', 'tif', tile)
+            lap_tile_ds = gdal.GetDriverByName('GTiff').Create(
+                lap_f,
+                tile.max_x - tile.min_x,
+                tile.max_y - tile.min_y,
+                1,
+                gdal.GDT_Float32,
+                options=['COMPRESS=DEFLATE']
+            )
+
+            lap_tile_ds.SetGeoTransform(tile_affine.to_gdal())
+
+            lap_tile_band = lap_tile_ds.GetRasterBand(1)
+            lap_tile_band.WriteArray(depth_laplace, 0, 0)
+            lap_tile_band.SetNoDataValue(0)
+            lap_tile_band.FlushCache()
+            lap_tile_ds.SetProjection(ifd.projection)
+            lap_tile_ds = None
+
+            gauss_f = self._get_tmp_file('gaussian', 'tif', tile)
+            gauss_tile_ds = gdal.GetDriverByName('GTiff').Create(
+                gauss_f,
+                tile.max_x - tile.min_x,
+                tile.max_y - tile.min_y,
+                1,
+                gdal.GDT_Float32,
+                options=['COMPRESS=DEFLATE']
+            )
+
+            gauss_tile_ds.SetGeoTransform(tile_affine.to_gdal())
+
+            gauss_tile_band = gauss_tile_ds.GetRasterBand(1)
+            gauss_tile_band.WriteArray(gauss_curv, 0, 0)
+            gauss_tile_band.SetNoDataValue(0)
+            gauss_tile_band.FlushCache()
+            gauss_tile_ds.SetProjection(ifd.projection)
+            gauss_tile_ds = None
+
             tf = self._get_tmp_file('fliers', 'tif', tile)
             tile_ds = gdal.GetDriverByName('GTiff').Create(
                 tf,
