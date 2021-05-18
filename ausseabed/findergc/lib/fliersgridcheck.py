@@ -266,28 +266,28 @@ class FliersCheck(GridCheck):
 
                 failed_point_count += 1
 
-            if self.spatial_export:
+        if self.spatial_export:
 
-                tf = self._get_tmp_file('fliers', 'tif', tile)
-                tile_ds = gdal.GetDriverByName('GTiff').Create(
-                    tf,
-                    tile.max_x - tile.min_x,
-                    tile.max_y - tile.min_y,
-                    1,
-                    gdal.GDT_Int16,
-                    options=['COMPRESS=DEFLATE']
-                )
+            tf = self._get_tmp_file('fliers', 'tif', tile)
+            tile_ds = gdal.GetDriverByName('GTiff').Create(
+                tf,
+                tile.max_x - tile.min_x,
+                tile.max_y - tile.min_y,
+                1,
+                gdal.GDT_Int16,
+                options=['COMPRESS=DEFLATE']
+            )
 
-                tile_ds.SetGeoTransform(tile_affine.to_gdal())
+            tile_ds.SetGeoTransform(tile_affine.to_gdal())
 
-                tile_band = tile_ds.GetRasterBand(1)
-                tile_band.WriteArray(flag_grid, 0, 0)
-                tile_band.SetNoDataValue(0)
-                tile_band.FlushCache()
-                tile_ds.SetProjection(ifd.projection)
-                tile_ds = None
+            tile_band = tile_ds.GetRasterBand(1)
+            tile_band.WriteArray(flag_grid, 0, 0)
+            tile_band.SetNoDataValue(0)
+            tile_band.FlushCache()
+            tile_ds.SetProjection(ifd.projection)
+            tile_ds = None
 
-                self._move_tmp_dir()
+            self._move_tmp_dir()
 
     def __get_messages_from_data(self, data, total_cells, total_failed_cells):
         ''' Generates a human readable summary of the data dict that is
