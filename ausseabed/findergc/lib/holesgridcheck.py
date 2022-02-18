@@ -70,7 +70,11 @@ class HolesCheck(GridCheck):
             return
 
         # the mask tells us what pixels are nodata (could be holes)
-        mask = np.ma.getmask(depth)
+        # use getmaskarray in place of getmask as getmask will return an
+        # empty dimensionless array when there is no nodata in the depth
+        # array.
+        mask = np.ma.getmaskarray(depth)
+
         # define a structure that will consider diagonal links
         s = [[1, 1, 1],
              [1, 1, 1],
