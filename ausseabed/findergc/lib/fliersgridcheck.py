@@ -229,6 +229,7 @@ class FliersCheck(GridCheck):
         src_proj.ImportFromWkt(ifd.projection)
         dst_proj = osr.SpatialReference()
         dst_proj.ImportFromEPSG(4326)
+        dst_proj.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
         coord_trans = osr.CoordinateTransformation(src_proj, dst_proj)
 
         self.geojson_points = []
