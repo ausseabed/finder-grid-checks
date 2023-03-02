@@ -1,4 +1,4 @@
-from typing import List, Dict, NoReturn, Callable
+from typing import List, Dict, NoReturn, Callable, Tuple
 from pathlib import Path
 
 from ausseabed.mbesgc.lib.data import get_input_details, \
@@ -74,6 +74,134 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         set_a = set([str(p.path) for p in a.files])
         set_b = set([str(p.path) for p in b.files])
         return set_a == set_b
+
+    def __flier_failed_count(self, flier_data: Dict) -> int:
+        failed_cell_laplacian_operator = flier_data['failed_cell_laplacian_operator']
+        failed_cell_gaussian_curvature = flier_data['failed_cell_gaussian_curvature']
+        failed_cell_count_noisy_edges = flier_data['failed_cell_count_noisy_edges']
+        failed_cell_adjacent_cells = flier_data['failed_cell_adjacent_cells']
+        failed_cell_sliver = flier_data['failed_cell_sliver']
+        failed_cell_isolated_group = flier_data['failed_cell_isolated_group']
+        total_flier_failed = sum([
+            failed_cell_laplacian_operator,
+            failed_cell_gaussian_curvature,
+            failed_cell_count_noisy_edges,
+            failed_cell_adjacent_cells,
+            failed_cell_sliver,
+            failed_cell_isolated_group,
+        ])
+        return total_flier_failed
+
+    def get_summary_details(self) -> List[Tuple[str, str]]:
+        return [
+            ("HOLES", "Number of Holes"),
+            ("HOLES", "Number of empty nodes"),
+            ("HOLES", "Number of Holes >8m2"),
+            ("HOLES", r"% of Nodes with Holes"),
+            ("HOLES", "Holiday Rule: holes cannot be >3x3 cells"),
+            ("HOLES", "Hole Finder Check comment"),
+            ("FLIERS", "Number of Nodes with Flier Fails"),
+            ("FLIERS", r"% of Nodes with Fliers"),
+            ("FLIERS", "Flier Finder Check comment"),
+        ]
+
+    def get_summary_value(
+        self,
+        field_section: str,
+        field_name: str,
+        filename: str,
+        qajson: QajsonRoot
+    ) -> object:
+        """
+        """
+        checks = self._get_qajson_checks(qajson)
+        file_checks = self._checks_filtered_by_file(filename, checks)
+
+        hole_check = None
+        hole_checks = self._checks_filtered_by_name(
+            'Hole Finder Check',
+            file_checks
+        )
+        # should really only be one
+        if len(hole_checks) >= 1:
+            hole_check = hole_checks[0]
+
+        flier_check = None
+        flier_checks = self._checks_filtered_by_name(
+            'Flier Finder Check',
+            file_checks
+        )
+        if len(flier_checks) >= 1:
+            flier_check = flier_checks[0]
+
+        if field_section == 'HOLES' and field_name == "Number of Holes":
+            if hole_check:
+                hole_data = hole_check.outputs.data
+                return hole_data['total_hole_count']
+            else:
+                return "No hole check"
+        elif field_section == 'HOLES' and field_name == "Number of empty nodes":
+            if hole_check:
+                hole_data = hole_check.outputs.data
+                return hole_data['total_hole_cell_count']
+            else:
+                return "No hole check"
+        elif field_section == 'HOLES' and field_name == "Number of Holes >8m2":
+            if hole_check:
+                # we  don't currently calculate this in the hole finder check
+                return ""
+            else:
+                return "No hole check"
+        elif field_section == 'HOLES' and field_name == r"% of Nodes with Holes":
+            if hole_check:
+                hole_data = hole_check.outputs.data
+                total_cells = hole_data['total_cell_count']
+                hole_cells = hole_data['total_hole_cell_count']
+                # the total cells is a count of all non-nodata cells, it therefore
+                # wont include the hole cells. So to get the actual total cell count
+                # we add the number of cells in holes to the number of non-nodata
+                # cells.
+                percentage_hole = (hole_cells) / (total_cells + hole_cells) * 100
+                return percentage_hole
+            else:
+                return "No hole check"
+        elif field_section == 'HOLES' and field_name == "Holiday Rule: holes cannot be >3x3 cells":
+            if hole_check:
+                # we  don't currently calculate this in the hole finder check
+                return ""
+            else:
+                return "No hole check"
+        elif field_section == 'HOLES' and field_name == "Hole Finder Check comment":
+            if hole_check:
+                # we  don't currently calculate this in the hole finder check
+                return ""
+            else:
+                return "No hole check"
+        elif field_section == 'FLIERS' and field_name == "Number of Nodes with Flier Fails":
+            if flier_check:
+                flier_data = flier_check.outputs.data
+                failed_cell_count = self.__flier_failed_count(flier_data)
+                total_cells = flier_data['total_cell_count']
+                return failed_cell_count
+            else:
+                return "No flier finder check"
+        elif field_section == 'FLIERS' and field_name == r"% of Nodes with Fliers":
+            if flier_check:
+                flier_data = flier_check.outputs.data
+                failed_cell_count = self.__flier_failed_count(flier_data)
+                total_cells = flier_data['total_cell_count']
+                return failed_cell_count / total_cells * 100
+            else:
+                return "No flier finder check"
+        elif field_section == 'FLIERS' and field_name == "Flier Finder Check comment":
+            if hole_check:
+                # we  don't currently calculate this in the hole finder check
+                return ""
+            else:
+                return "No flier finder check"
+        else:
+            return 0
+
 
     def run(
             self,
