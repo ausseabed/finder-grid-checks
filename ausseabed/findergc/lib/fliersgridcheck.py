@@ -68,8 +68,13 @@ class FliersCheck(GridCheck):
         self.max_geojson_points_exceeded = False
         self.geojson_points = []
 
+        self.missing_depth = None
+
     def merge_results(self, last_check: GridCheck):
         self.start_time = last_check.start_time
+
+        if self.execution_status == "aborted":
+            return
 
         self.total_cell_count += last_check.total_cell_count
         self.failed_cell_laplacian_operator += last_check.failed_cell_laplacian_operator
@@ -93,8 +98,19 @@ class FliersCheck(GridCheck):
             depth,
             density,
             uncertainty,
+            pinkchart,
             progress_callback=None):
         # run check on tile data
+
+        # this check only requires the depth layer, so check it is given
+        # if not mark this check as aborted
+        self.missing_depth = depth is None
+        if self.missing_depth:
+            self.execution_status = "aborted"
+            self.error_message = "Missing depth data"
+            # we cant run the check so return
+            return
+
         self.max_geojson_points_exceeded = False
         self.total_cell_count = int(depth.count())
 
@@ -357,29 +373,41 @@ class FliersCheck(GridCheck):
             error=self.error_message
         )
 
-        data = {
-            "failed_cell_laplacian_operator": self.failed_cell_laplacian_operator,
-            "failed_cell_gaussian_curvature": self.failed_cell_gaussian_curvature,
-            "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges,
-            "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells,
-            "total_cell_count": self.total_cell_count
-        }
+        data = {}
+        if self.execution_status != "aborted":
+            data = {
+                "failed_cell_laplacian_operator": self.failed_cell_laplacian_operator,
+                "failed_cell_gaussian_curvature": self.failed_cell_gaussian_curvature,
+                "failed_cell_count_noisy_edges": self.failed_cell_count_noisy_edges,
+                "failed_cell_adjacent_cells": self.failed_cell_adjacent_cells,
+                "total_cell_count": self.total_cell_count
+            }
 
-        total_failed = sum([
-            self.failed_cell_laplacian_operator,
-            self.failed_cell_gaussian_curvature,
-            self.failed_cell_count_noisy_edges,
-            self.failed_cell_adjacent_cells
-        ])
+            total_failed = sum([
+                self.failed_cell_laplacian_operator,
+                self.failed_cell_gaussian_curvature,
+                self.failed_cell_count_noisy_edges,
+                self.failed_cell_adjacent_cells
+            ])
 
-        if self._sg_check_slivers:
-            data["failed_cell_sliver"] = self.failed_cell_sliver
-            total_failed += self.failed_cell_sliver
-        if self._sg_check_isolated:
-            data["failed_cell_isolated_group"] = self.failed_cell_isolated_group
-            total_failed += self.failed_cell_isolated_group
+            if self._sg_check_slivers:
+                data["failed_cell_sliver"] = self.failed_cell_sliver
+                total_failed += self.failed_cell_sliver
+            if self._sg_check_isolated:
+                data["failed_cell_isolated_group"] = self.failed_cell_isolated_group
+                total_failed += self.failed_cell_isolated_group
 
-        if total_failed > 0:
+        if self.execution_status == "aborted":
+            return QajsonOutputs(
+                execution=execution,
+                files=None,
+                count=None,
+                percentage=None,
+                messages=[self.error_message],
+                data=data,
+                check_state=GridCheckState.cs_fail
+            )
+        elif total_failed > 0:
             check_state = GridCheckState.cs_fail
             if self.spatial_qajson:
                 map_feature = geojson.FeatureCollection(self.geojson_points)

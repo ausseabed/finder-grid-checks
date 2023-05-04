@@ -4,6 +4,7 @@ from pathlib import Path
 from ausseabed.mbesgc.lib.data import get_input_details, \
     inputs_from_qajson_checks
 from ausseabed.mbesgc.lib.executor import Executor
+from ausseabed.mbesgc.qax.plugin import FileGrouping
 from hyo2.qax.lib.plugin import QaxCheckToolPlugin, QaxCheckReference, \
     QaxFileType
 from ausseabed.qajson.model import QajsonRoot, QajsonDataLevel, QajsonCheck, \
@@ -16,6 +17,12 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
 
     # supported raw data file types
     file_types = [
+        QaxFileType(
+            name="Shapefile",
+            extension="shp",
+            group="Pink Chart",
+            icon="shp.png"
+        ),
         QaxFileType(
             name="GeoTIFF",
             extension="tiff",
@@ -309,20 +316,26 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
                 dl_sp = getattr(qa_json.qa, dl)
                 dl_sp.checks.remove(mgc_check)
 
-        for (input_file, input_file_group) in files:
+
+        # `files` is a single flat list of all the input files (and file types)
+        # now take that and group it using the filenames, and types
+        # this is to support grouping tif files with bands spread across
+        # multiple files, and the potential inclusion of coverage areas (pink
+        # chart)
+        groups = FileGrouping.calculate_groupings(files)
+
+        for group in groups:
             for mgc_check in all_mgc_checks:
-                check_ref = self.get_check_reference(mgc_check.info.id)
-                if not check_ref.supports_file(input_file, input_file_group):
-                    continue
                 mgc_check_clone = QajsonCheck.from_dict(mgc_check.to_dict())
                 inputs = mgc_check_clone.get_or_add_inputs()
-                inputs.files.append(
-                    QajsonFile(
-                        path=str(input_file),
-                        file_type=input_file_group,
-                        description=None
+                for fn, ft in group.files:
+                    inputs.files.append(
+                        QajsonFile(
+                            path=str(fn),
+                            file_type=ft,
+                            description=None
+                        )
                     )
-                )
                 # ** ASSUME ** mgc checks only go in the survey_products
                 # data level
                 qa_json.qa.survey_products.checks.append(mgc_check_clone)
