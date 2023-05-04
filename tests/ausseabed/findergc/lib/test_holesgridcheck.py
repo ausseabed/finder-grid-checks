@@ -88,7 +88,8 @@ class TestHolidays(unittest.TestCase):
             tile=self.dummy_tile,
             depth=self.depth,
             density=self.density,
-            uncertainty=self.uncertainty
+            uncertainty=self.uncertainty,
+            pinkchart=None
         )
 
         output = check.get_outputs()
@@ -106,7 +107,8 @@ class TestHolidays(unittest.TestCase):
             tile=self.dummy_tile,
             depth=self.depth,
             density=self.density,
-            uncertainty=self.uncertainty
+            uncertainty=self.uncertainty,
+            pinkchart=None
         )
 
         output = check.get_outputs()
