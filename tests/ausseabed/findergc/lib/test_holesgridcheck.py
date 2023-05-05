@@ -115,6 +115,47 @@ class TestHolidays(unittest.TestCase):
 
         self.assertEqual(output.data["total_hole_count"], 5)
 
+    def test_holescheck_with_edges_inc_pinkchart(self):
+        input_params = [
+            QajsonParam("Ignore edge holes", False)
+        ]
+
+        mask = [
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 1],
+            [1, 1, 1, 1]
+        ]
+        mask = np.array(mask)
+        mask = (mask == 1)
+        depth_data = np.random.uniform(low=11.0, high=21.0, size=(len(mask), len(mask[0])))
+        depth = np.ma.array(
+            np.array(depth_data, dtype=np.float32),
+            mask=mask
+        )
+
+        pc_data = [
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [1, 0, 0, 0]
+        ]
+        pinkchart = np.array(pc_data, dtype=np.byte)
+
+        check = HolesCheck(input_params)
+        check.run(
+            ifd=self.dummy_ifd,
+            tile=self.dummy_tile,
+            depth=depth,
+            density=None,
+            uncertainty=None,
+            pinkchart=pinkchart
+        )
+
+        self.assertEqual(check.hole_count, 3)
+        self.assertEqual(check.hole_pixels, 3)
+        self.assertEqual(check.total_cell_count, 13)
+
     def test_holes(self):
         # code here was used to develop what is now included in the holesgridcheck.py
         # file. Kept in case there is a need to refine this process in future.

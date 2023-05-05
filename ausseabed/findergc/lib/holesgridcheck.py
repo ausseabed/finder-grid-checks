@@ -78,7 +78,12 @@ class HolesCheck(GridCheck):
             # we cant run the check so return
             return
 
+        # if there's no pink chart data then use the number of non-nodata cells
+        # as the cell count. Otherwise count the number of pinkchart cells
         self.total_cell_count = int(depth.count())
+        if pinkchart is not None:
+            self.total_cell_count = int(pinkchart.sum())
+
         self.hole_count = 0
         self.hole_pixels = 0
 
@@ -90,6 +95,9 @@ class HolesCheck(GridCheck):
         # empty dimensionless array when there is no nodata in the depth
         # array.
         mask = np.ma.getmaskarray(depth)
+
+        if pinkchart is not None:
+            mask = (mask & pinkchart)
 
         # define a structure that will consider diagonal links
         s = [[1, 1, 1],
