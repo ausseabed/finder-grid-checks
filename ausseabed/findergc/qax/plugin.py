@@ -35,12 +35,12 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
             group="Survey DTMs",
             icon="tif.png"
         ),
-        QaxFileType(
-            name="BAG file",
-            extension="bag",
-            group="Survey DTMs",
-            icon="bag.png"
-        ),
+        # QaxFileType(
+        #     name="BAG file",
+        #     extension="bag",
+        #     group="Survey DTMs",
+        #     icon="bag.png"
+        # ),
     ]
 
     def __init__(self):
