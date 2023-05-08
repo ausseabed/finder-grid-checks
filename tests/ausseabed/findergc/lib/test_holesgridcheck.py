@@ -116,9 +116,9 @@ class TestHolidays(unittest.TestCase):
         self.assertEqual(output.data["total_hole_count"], 5)
 
     def test_holescheck_with_edges_inc_pinkchart(self):
-        input_params = [
-            QajsonParam("Ignore edge holes", False)
-        ]
+        # NOTE: holes check will not ignore edges when pink chart is specified
+        # so no need to set the input param
+        input_params = []
 
         mask = [
             [0, 0, 0, 0],

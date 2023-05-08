@@ -83,6 +83,11 @@ class HolesCheck(GridCheck):
         self.total_cell_count = int(depth.count())
         if pinkchart is not None:
             self.total_cell_count = int(pinkchart.sum())
+            # turn off ignore edges if there is a pink chart specified
+            # the method implemented below does not incorperate the pink chart
+            # layer, and it's very unlikely the use would want to ignore edge
+            # holes if they have specified a pink chart layer.
+            self.ignore_edges = False
 
         self.hole_count = 0
         self.hole_pixels = 0
