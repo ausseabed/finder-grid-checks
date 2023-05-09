@@ -99,7 +99,7 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         ])
         return total_flier_failed
 
-    def get_summary_details(self) -> List[Tuple[str, str]]:
+    def get_summary_details(self, qajson: QajsonRoot) -> List[Tuple[str, str]]:
         return [
             ("HOLES", "Number of Holes"),
             ("HOLES", "Number of empty nodes"),
