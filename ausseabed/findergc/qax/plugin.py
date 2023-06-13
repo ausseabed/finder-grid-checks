@@ -20,7 +20,7 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         QaxFileType(
             name="Shapefile",
             extension="shp",
-            group="Pink Chart",
+            group="Coverage Area",
             icon="shp.png"
         ),
         QaxFileType(
