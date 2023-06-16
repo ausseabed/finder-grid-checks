@@ -34,6 +34,7 @@ class HolesCheck(GridCheck):
         self.ignore_edges = self.get_param('Ignore edge holes')
 
         self.tiles_geojson = MultiPolygon()
+        self.extents_geojson = geojson.MultiPolygon()
 
         # amount of padding to place around failing pixels
         # this simplifies the geometry, and enlarges the failing area that
@@ -177,6 +178,7 @@ class HolesCheck(GridCheck):
         )
 
         if self.spatial_qajson:
+            self.extents_geojson = ifd.get_extents_feature()
 
             labeled_array = labeled_array.astype(np.int16)
 
@@ -332,6 +334,7 @@ class HolesCheck(GridCheck):
             check_state = GridCheckState.cs_fail
             if self.spatial_qajson:
                 data['map'] = self.tiles_geojson
+                data['extents'] = self.extents_geojson
 
             msg = (
                 f"A total of {self.hole_count} holes were found. The total area "

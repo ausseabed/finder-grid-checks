@@ -68,6 +68,8 @@ class FliersCheck(GridCheck):
         self.max_geojson_points_exceeded = False
         self.geojson_points = []
 
+        self.extents_geojson = geojson.MultiPolygon()
+
         self.missing_depth = None
 
     def merge_results(self, last_check: GridCheck):
@@ -251,6 +253,8 @@ class FliersCheck(GridCheck):
         self.geojson_points = []
 
         if self.spatial_qajson:
+            self.extents_geojson = ifd.get_extents_feature()
+
             # get locations of all nodes that have failed one of the flier
             # checks
             failed_cell_indicies = np.argwhere(flag_grid > 0)
@@ -413,6 +417,7 @@ class FliersCheck(GridCheck):
                 map_feature = geojson.FeatureCollection(self.geojson_points)
                 map = geojson.mapping.to_mapping(map_feature)
                 data['map'] = map
+                data['extents'] = self.extents_geojson
 
             messages = self.__get_messages_from_data(
                 data,
