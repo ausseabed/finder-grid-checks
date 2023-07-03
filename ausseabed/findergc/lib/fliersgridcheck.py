@@ -378,7 +378,7 @@ class FliersCheck(GridCheck):
         )
 
         data = {}
-        if self.execution_status != "aborted":
+        if self.execution_status == "completed":
             data = {
                 "failed_cell_laplacian_operator": self.failed_cell_laplacian_operator,
                 "failed_cell_gaussian_curvature": self.failed_cell_gaussian_curvature,

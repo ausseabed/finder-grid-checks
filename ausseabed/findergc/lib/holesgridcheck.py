@@ -321,7 +321,7 @@ class HolesCheck(GridCheck):
 
         messages = []
         data = {}
-        if self.execution_status != "aborted":
+        if self.execution_status == "completed":
             data = {
                 "total_hole_count": self.hole_count,
                 "total_hole_cell_count": self.hole_pixels,
