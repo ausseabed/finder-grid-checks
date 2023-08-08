@@ -4,6 +4,7 @@ from scipy import ndimage
 from typing import Optional, Dict, List, Any
 import collections
 import geojson
+import logging
 import numpy as np
 import numpy.ma as ma
 
@@ -14,6 +15,8 @@ from ausseabed.mbesgc.lib.tiling import Tile
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 
 from ausseabed.findergc.lib import fliers
+
+logger = logging.getLogger(__name__)
 
 
 class FliersCheck(GridCheck):
@@ -110,6 +113,7 @@ class FliersCheck(GridCheck):
         if self.missing_depth:
             self.execution_status = "aborted"
             self.error_message = "Missing depth data"
+            logger.info(f"{self.error_message}, aborting flier finder check")
             # we cant run the check so return
             return
 

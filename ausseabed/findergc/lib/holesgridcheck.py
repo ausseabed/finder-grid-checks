@@ -5,6 +5,7 @@ from typing import Optional, Dict, List, Any
 import collections
 import geojson
 from geojson import MultiPolygon
+import logging
 import numpy as np
 import numpy.ma as ma
 
@@ -13,6 +14,8 @@ from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState, \
     GridCheckResult
 from ausseabed.mbesgc.lib.tiling import Tile
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
+
+logger = logging.getLogger(__name__)
 
 
 class HolesCheck(GridCheck):
@@ -76,6 +79,7 @@ class HolesCheck(GridCheck):
         if self.missing_depth:
             self.execution_status = "aborted"
             self.error_message = "Missing depth data"
+            logger.info(f"{self.error_message}, aborting hole finder check")
             # we cant run the check so return
             return
 
