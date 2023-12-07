@@ -4,7 +4,6 @@ from pathlib import Path
 from ausseabed.mbesgc.lib.data import get_input_details, \
     inputs_from_qajson_checks
 from ausseabed.mbesgc.lib.executor import Executor
-from ausseabed.mbesgc.qax.plugin import FileGrouping
 from hyo2.qax.lib.plugin import QaxCheckToolPlugin, QaxCheckReference, \
     QaxFileType
 from ausseabed.qajson.model import QajsonRoot, QajsonDataLevel, QajsonCheck, \
@@ -290,61 +289,3 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         #     # replace the input qajson check outputs with the output generated
         #     # by the check_runner
         #     in_check.outputs = out_check.outputs
-
-    def update_qa_json_input_files(
-            self, qa_json: QajsonRoot, files: List[Path]) -> NoReturn:
-        """ Updates qa_json to support the list of provided files. function
-        defined in base class has been overwritten to support some MBES GC
-        specifics in the way it supports multiple files.
-        """
-        # when this function has been called qa_json has been updated to
-        # include the list of checks. While Mate will support processing of
-        # multiple files within one QA JSON check definition, the QA JSON
-        # schema doesn't support multiple outputs per check. To work around
-        # this, this function take the specified checks, and adds one check
-        # definition per file. Each Mate check is therefore run with a single
-        # input file, but the same check is duplicated for each file passed in
-        all_data_levels = [check_ref.data_level for check_ref in self.checks()]
-        all_data_levels = list(set(all_data_levels))
-
-        # build a list of GC checks in the qa_json for all the different data
-        # levels (this really only needs to check the raw_data data level)
-        all_mgc_checks = []
-        for dl in all_data_levels:
-            dl_sp = getattr(qa_json.qa, dl)
-            if dl_sp is None:
-                continue
-            for check in dl_sp.checks:
-                if self.get_check_reference(check.info.id) is not None:
-                    all_mgc_checks.append(check)
-
-        # now remove the current mgc definitions as we'll add these all back
-        # in again for each input file.
-        for mgc_check in all_mgc_checks:
-            for dl in all_data_levels:
-                dl_sp = getattr(qa_json.qa, dl)
-                dl_sp.checks.remove(mgc_check)
-
-
-        # `files` is a single flat list of all the input files (and file types)
-        # now take that and group it using the filenames, and types
-        # this is to support grouping tif files with bands spread across
-        # multiple files, and the potential inclusion of coverage areas (pink
-        # chart)
-        groups = FileGrouping.calculate_groupings(files)
-
-        for group in groups:
-            for mgc_check in all_mgc_checks:
-                mgc_check_clone = QajsonCheck.from_dict(mgc_check.to_dict())
-                inputs = mgc_check_clone.get_or_add_inputs()
-                for fn, ft in group.files:
-                    inputs.files.append(
-                        QajsonFile(
-                            path=str(fn),
-                            file_type=ft,
-                            description=None
-                        )
-                    )
-                # ** ASSUME ** mgc checks only go in the survey_products
-                # data level
-                qa_json.qa.survey_products.checks.append(mgc_check_clone)
