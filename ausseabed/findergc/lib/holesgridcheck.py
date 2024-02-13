@@ -249,7 +249,7 @@ class HolesCheck(GridCheck):
                 transformed = feature.GetGeometryRef()
                 transformed.Transform(transform)
                 geojson_feature = geojson.loads(feature.ExportToJson())
-                self.tiles_geojson.coordinates.extend(
+                self.tiles_geojson.coordinates.append(
                     geojson_feature.geometry.coordinates
                 )
 
