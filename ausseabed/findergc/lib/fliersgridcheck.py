@@ -78,7 +78,7 @@ class FliersCheck(GridCheck):
     def merge_results(self, last_check: GridCheck):
         self.start_time = last_check.start_time
 
-        if self.execution_status == "aborted":
+        if self.execution_status == "aborted" or self.execution_status == "failed":
             return
 
         self.total_cell_count += last_check.total_cell_count
@@ -405,7 +405,7 @@ class FliersCheck(GridCheck):
                 data["failed_cell_isolated_group"] = self.failed_cell_isolated_group
                 total_failed += self.failed_cell_isolated_group
 
-        if self.execution_status == "aborted":
+        if self.execution_status == "aborted" or self.execution_status == "failed":
             return QajsonOutputs(
                 execution=execution,
                 files=None,

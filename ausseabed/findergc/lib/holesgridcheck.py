@@ -49,7 +49,7 @@ class HolesCheck(GridCheck):
     def merge_results(self, last_check: GridCheck):
         self.start_time = last_check.start_time
 
-        if self.execution_status == "aborted":
+        if self.execution_status == "aborted" or self.execution_status == "failed":
             return
 
         self.hole_count += last_check.hole_count
@@ -332,7 +332,7 @@ class HolesCheck(GridCheck):
                 "total_cell_count": self.total_cell_count
             }
 
-        if self.execution_status == "aborted":
+        if self.execution_status == "aborted" or self.execution_status == "failed":
             check_state = GridCheckState.cs_fail
         elif self.hole_count > 0:
             check_state = GridCheckState.cs_fail
