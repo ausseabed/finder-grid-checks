@@ -37,7 +37,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc001 = np.ma.array(
             np.array(tc001, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc002 = [
@@ -51,7 +51,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc002 = np.ma.array(
             np.array(tc002, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc003 = [
@@ -65,7 +65,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc003 = np.ma.array(
             np.array(tc003, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc004 = [
@@ -79,7 +79,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc004 = np.ma.array(
             np.array(tc004, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc005 = [
@@ -93,7 +93,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc005 = np.ma.array(
             np.array(tc005, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc006 = [
@@ -107,7 +107,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc006 = np.ma.array(
             np.array(tc006, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc007 = [
@@ -121,7 +121,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc007 = np.ma.array(
             np.array(tc007, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc008 = [
@@ -135,7 +135,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc008 = np.ma.array(
             np.array(tc008, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc009 = [
@@ -149,7 +149,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc009 = np.ma.array(
             np.array(tc009, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc010 = [
@@ -163,7 +163,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc010 = np.ma.array(
             np.array(tc010, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc011 = [
@@ -177,7 +177,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc011 = np.ma.array(
             np.array(tc011, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
         tc012 = [
@@ -191,7 +191,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # create a density dataset based on the above array. 
         cls.tc012 = np.ma.array(
             np.array(tc012, dtype=np.float32),
-            mask=np.full((6, 6), True, dtype=bool)
+            mask=np.full((6, 6), False, dtype=bool)
         )
 
     def get_tc_data(self, density: ma.MaskedArray) -> tuple[InputFileDetails, Tile]:
