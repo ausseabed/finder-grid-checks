@@ -14,17 +14,20 @@ from ausseabed.mbesgc.lib.tiling import Tile
 logger = logging.getLogger(__name__)
 
 
-class HolesAndGapsCheck(GridCheck):
+class HoleAndGapCheck(GridCheck):
     '''
-    Checks for holes and data gaps as indicated by patches of nodata
+    Checks for data holes and data gaps as indicated by patches of nodata
     '''
 
     id = 'd095f584-a4aa-4f92-b123-336e1e328289'
-    name = 'Hole and Data Gaps Check'
+    name = 'Data Hole and Data Gap Check'
     version = '1'
 
     # no input params required for this check
-    input_params = []
+    input_params = [
+        QajsonParam("Ignore edge holes", True),
+        QajsonParam("Minimum soundings per node", 5),
+    ]
 
     def __init__(self, input_params: List[QajsonParam]):
         super().__init__(input_params)
@@ -68,19 +71,21 @@ class HolesAndGapsCheck(GridCheck):
             progress_callback=None):
         # run check on tile data
 
-        # this check only requires the depth layer, so check it is given
+        # this check only requires the density layer, so check it is given
         # if not mark this check as aborted
-        self.missing_depth = depth is None
-        if self.missing_depth:
+        # density layer is required as the presence of holes is not indicated
+        # by nodata values, but by density values below a threshold
+        self.missing_density = density is None
+        if self.missing_density:
             self.execution_status = "aborted"
-            self.error_message = "Missing depth data"
-            logger.info(f"{self.error_message}, aborting hole and data gaps check")
+            self.error_message = "Missing density data"
+            logger.info(f"{self.error_message}, aborting hole and data gap check")
             # we cant run the check so return
             return
 
         # if there's no pink chart data then use the number of non-nodata cells
         # as the cell count. Otherwise count the number of pinkchart cells
-        self.total_cell_count = int(depth.count())
+        self.total_cell_count = int(density.count())
         if pinkchart is not None:
             self.total_cell_count = int(pinkchart.sum())
 
