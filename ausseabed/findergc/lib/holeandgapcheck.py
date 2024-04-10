@@ -1,7 +1,7 @@
 import geojson
 import logging
 import numpy as np
-
+from scipy.ndimage import label, convolve, maximum
 from numpy.typing import ArrayLike
 from typing import List
 
@@ -101,15 +101,55 @@ class HoleAndGapCheck(GridCheck):
         if self.total_cell_count == 0:
             return
 
-        # the mask tells us what pixels are nodata (could be holes)
-        # use getmaskarray in place of getmask as getmask will return an
-        # empty dimensionless array when there is no nodata in the depth
-        # array.
-        mask = np.ma.getmaskarray(depth)
+        # hole and gap check is not based on nodata within the dataset, it's
+        # based on what cells have a density lower than a given threshold.
+        # Here's where we create that mask.
+        density_threshold = self.get_param("Minimum soundings per node")
+        mask = density < density_threshold
 
         if pinkchart is not None:
             mask = (mask & pinkchart)
-        
+
+        # we want to identify groups of cells that are 2x2 in size, each
+        # hole must have at least one of these in them to be classified
+        # a hole
+        s = [
+            [1, 1],
+            [1, 1],
+        ]
+        # now we run the kernel over the mask. Where there's holes we'll end
+        # up with a value of 4, but the value 4 won't cover all of the hole
+        c = convolve(mask.astype(int), s, mode='constant', cval=0).astype(int)
+
+        # define a structure that will consider only links that share a cell
+        # edge (no diagonals).
+        s = [[0, 1, 0],
+             [1, 1, 1],
+             [0, 1, 0]]
+        # use label to uniquely identify each contiguous hole, this
+        # gives each hole a unique id (label)
+        labels, label_count = label(mask, structure=s, output=np.int32)
+
+        # find the maximum value of the convolution result for each one of the
+        # labeled regions. A labeled region is a hole if this value is 4 in
+        # at least one of the cells
+        # we get a list of maximums where the index is the label from this function
+        maximums = maximum(c, labels=labels, index=np.arange(1, label_count + 1))
+        # the list is zero indexed, but our labels start at one. So we need to insert
+        # a lookup table value for the 0 label into this list
+        maximums = np.insert(maximums, 0, 0)
+        # replace all label ids, with the maximum value found for that label in its
+        # area
+        mask_maximums = maximums[labels]
+
+
+
+        # print("convolve2d")
+        # print(c)
+        # print(labels)
+        # print(maximums)
+        # print(mask_maximums)
+
         #
         # TODO: delete the following and add an actual implementation for this check
         #
@@ -117,6 +157,11 @@ class HoleAndGapCheck(GridCheck):
         self.gap_pixels = 0
         self.hole_count = 2
         self.hole_pixels = 2
+
+        self.hole_pixels = np.count_nonzero(mask_maximums == 4)
+        self.gap_pixels = np.count_nonzero((mask_maximums < 4) & (mask_maximums > 0))
+
+
 
         #
         # TODO: later, add support for extracting geojson and 'detailed spatial outputs'
