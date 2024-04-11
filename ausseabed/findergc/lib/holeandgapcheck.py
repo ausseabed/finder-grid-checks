@@ -5,6 +5,7 @@ from scipy.ndimage import label, convolve, maximum
 from numpy.typing import ArrayLike
 from typing import List
 
+from ausseabed.findergc.lib.utils import remove_edge_labels
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState
@@ -31,6 +32,9 @@ class HoleAndGapCheck(GridCheck):
 
     def __init__(self, input_params: List[QajsonParam]):
         super().__init__(input_params)
+
+        self.ignore_edges = self.get_param('Ignore edge holes')
+        self.density_threshold = self.get_param('Minimum soundings per node')
 
         # initialise the output geojson to empty geom
         self.tiles_geojson = geojson.MultiPolygon()
@@ -104,8 +108,7 @@ class HoleAndGapCheck(GridCheck):
         # hole and gap check is not based on nodata within the dataset, it's
         # based on what cells have a density lower than a given threshold.
         # Here's where we create that mask.
-        density_threshold = self.get_param("Minimum soundings per node")
-        mask = density < density_threshold
+        mask = density < self.density_threshold
 
         if pinkchart is not None:
             mask = (mask & pinkchart)
@@ -129,6 +132,9 @@ class HoleAndGapCheck(GridCheck):
         # use label to uniquely identify each contiguous hole, this
         # gives each hole a unique id (label)
         labels, label_count = label(mask, structure=s, output=np.int32)
+
+        if self.ignore_edges:
+            remove_edge_labels(labels)
 
         # find the maximum value of the convolution result for each one of the
         # labeled regions. A labeled region is a hole if this value is 4 in
