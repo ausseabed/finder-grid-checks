@@ -91,7 +91,7 @@ class TestHolidays(unittest.TestCase):
             uncertainty=self.uncertainty,
             pinkchart=None
         )
-
+        check.execution_status = 'completed'
         output = check.get_outputs()
 
         self.assertEqual(output.data["total_hole_count"], 7)
@@ -110,7 +110,7 @@ class TestHolidays(unittest.TestCase):
             uncertainty=self.uncertainty,
             pinkchart=None
         )
-
+        check.execution_status = 'completed'
         output = check.get_outputs()
 
         self.assertEqual(output.data["total_hole_count"], 5)
