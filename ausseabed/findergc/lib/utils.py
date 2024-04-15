@@ -163,8 +163,6 @@ def labeled_array_to_geojson(
         transformed = feature.GetGeometryRef()
         transformed.Transform(transform)
         geojson_feature = geojson.loads(feature.ExportToJson())
-        print(type(geojson_feature))
-        print(geojson_feature)
         features.append(geojson_feature)
 
     ogr_simple_dataset.Destroy()
