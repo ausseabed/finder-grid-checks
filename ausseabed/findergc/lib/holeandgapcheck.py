@@ -28,6 +28,8 @@ class HoleAndGapCheck(GridCheck):
     input_params = [
         QajsonParam("Ignore edge holes", True),
         QajsonParam("Minimum soundings per node", 5),
+        QajsonParam("Gap area threshold (%)", 2),
+        QajsonParam("Hole area threshold (%)", 0),
     ]
 
     def __init__(self, input_params: List[QajsonParam]):
@@ -35,10 +37,17 @@ class HoleAndGapCheck(GridCheck):
 
         self.ignore_edges = self.get_param('Ignore edge holes')
         self.density_threshold = self.get_param('Minimum soundings per node')
+        self.gap_area_threshold = self.get_param('Gap area threshold (%)') / 100
+        self.hole_area_threshold = self.get_param('Hole area threshold (%)') / 100
 
         # initialise the output geojson to empty geom
         self.tiles_geojson = geojson.MultiPolygon()
         self.extents_geojson = geojson.MultiPolygon()
+
+        # amount of padding to place around failing pixels
+        # this simplifies the geometry, and enlarges the failing area that
+        # will allow it to be shown in the UI more easily
+        self.pixel_growth = 5
 
     def merge_results(self, last_check: GridCheck):
         # technically QAX processes data through this check in tiles. It's this
@@ -194,22 +203,31 @@ class HoleAndGapCheck(GridCheck):
                 "total_gap_cell_count": self.gap_pixels,
                 "total_cell_count": self.total_cell_count
             }
-
-        if self.execution_status == "aborted":
-            check_state = GridCheckState.cs_fail
-        elif self.hole_count > 0:
-            check_state = GridCheckState.cs_fail
             if self.spatial_qajson:
                 data['map'] = self.tiles_geojson
                 data['extents'] = self.extents_geojson
 
-            msg = (
-                f"A total of {self.hole_count} holes were found. The total area "
-                f"of these holes was {self.hole_pixels}px.")
-            messages = [msg]
+            gap_fraction = self.gap_pixels / self.total_cell_count
+            hole_fraction = self.hole_pixels / self.total_cell_count
+
+        if self.execution_status == "aborted":
+            check_state = GridCheckState.cs_fail
+        elif hole_fraction > self.hole_area_threshold or gap_fraction > self.gap_area_threshold:
+            check_state = GridCheckState.cs_fail
+            messages = []
+            if hole_fraction > self.hole_area_threshold:
+                messages.append(
+                    f"Percentage area identified as holes was found to be {hole_fraction*100.0:.5f}% "
+                    f"({self.hole_pixels} cells), this exceeds the threshold of {self.hole_area_threshold*100}%"
+                )
+            if gap_fraction > self.gap_area_threshold:
+                messages.append(
+                    f"Percentage area identified as gaps was found to be {gap_fraction*100.0:.5f}% "
+                    f"({self.gap_pixels} cells), this exceeds the threshold of {self.gap_area_threshold*100}%"
+                )
         else:
             check_state = GridCheckState.cs_pass
-            messages = ["No holes found"]
+            messages = ["Total area of holes and gaps are under acceptable thresholds"]
 
         return QajsonOutputs(
             execution=execution,
