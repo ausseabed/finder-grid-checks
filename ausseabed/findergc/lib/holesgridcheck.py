@@ -9,7 +9,7 @@ import logging
 import numpy as np
 import numpy.ma as ma
 
-from ausseabed.findergc.lib.utils import remove_edge_labels
+from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson
 from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState, \
     GridCheckResult
@@ -136,7 +136,7 @@ class HolesCheck(GridCheck):
             self.hole_count += 1
             self.hole_pixels += hole_px_count
 
-        if not (self.spatial_export or self.spatial_export_location):
+        if not (self.spatial_export or self.spatial_export_location or self.spatial_qajson):
             # if we don't generate spatial outputs, then there's no
             # need to do any further processing
             return
@@ -150,77 +150,17 @@ class HolesCheck(GridCheck):
         if self.spatial_qajson:
             self.extents_geojson = ifd.get_extents_feature()
 
-            labeled_array = labeled_array.astype(np.int16)
-
-            tile_ds = gdal.GetDriverByName('MEM').Create(
-                '',
-                tile.max_x - tile.min_x,
-                tile.max_y - tile.min_y,
-                1,
-                gdal.GDT_CInt16
+            features = labeled_array_to_geojson(
+                labeled_array,
+                tile,
+                ifd,
+                self.pixel_growth
             )
 
-            # grow out failed pixels to make them more obvious. We've already
-            # calculated the pass/fail stats so this won't impact results.
-            labeled_array_grow = self._grow_pixels(
-                labeled_array, self.pixel_growth)
-
-            # simplify distance is calculated as the distance pixels are grown out
-            # `ifd.geotransform[1]` is pixel size
-            simplify_distance = 0.5 * self.pixel_growth * ifd.geotransform[1]
-
-            tile_ds.SetGeoTransform(tile_affine.to_gdal())
-
-            tile_band = tile_ds.GetRasterBand(1)
-            tile_band.WriteArray(labeled_array_grow, 0, 0)
-            tile_band.SetNoDataValue(0)
-            tile_band.FlushCache()
-            tile_ds.SetProjection(ifd.projection)
-
-            ogr_srs = osr.SpatialReference()
-            ogr_srs.ImportFromWkt(ifd.projection)
-
-            ogr_driver = ogr.GetDriverByName('Memory')
-            ogr_dataset = ogr_driver.CreateDataSource('shapemask')
-            ogr_layer = ogr_dataset.CreateLayer('shapemask', srs=ogr_srs)
-
-            # used the input raster data 'tile_band' as the input and mask, if not
-            # used as a mask then a feature that outlines the entire dataset is
-            # also produced
-            gdal.Polygonize(
-                tile_band,
-                tile_band,
-                ogr_layer,
-                -1,
-                [],
-                callback=None
-            )
-
-            ogr_simple_driver = ogr.GetDriverByName('Memory')
-            ogr_simple_dataset = ogr_simple_driver.CreateDataSource(
-                'failed_poly')
-            ogr_simple_layer = ogr_simple_dataset.CreateLayer(
-                'failed_poly', srs=None)
-
-            self._simplify_layer(
-                ogr_layer,
-                ogr_simple_layer,
-                simplify_distance)
-
-            ogr_srs_out = osr.SpatialReference()
-            ogr_srs_out.ImportFromEPSG(4326)
-            transform = osr.CoordinateTransformation(ogr_srs, ogr_srs_out)
-
-            for feature in ogr_simple_layer:
-                transformed = feature.GetGeometryRef()
-                transformed.Transform(transform)
-                geojson_feature = geojson.loads(feature.ExportToJson())
+            for feature in features:
                 self.tiles_geojson.coordinates.append(
-                    geojson_feature.geometry.coordinates
+                    feature.geometry.coordinates
                 )
-
-            ogr_simple_dataset.Destroy()
-            ogr_dataset.Destroy()
 
         if self.spatial_export:
             tf = self._get_tmp_file('holes', 'tif', tile)
