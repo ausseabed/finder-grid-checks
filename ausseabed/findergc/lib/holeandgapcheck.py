@@ -5,7 +5,7 @@ from scipy.ndimage import label, convolve, maximum
 from numpy.typing import ArrayLike
 from typing import List
 
-from ausseabed.findergc.lib.utils import remove_edge_labels
+from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState
@@ -148,29 +148,29 @@ class HoleAndGapCheck(GridCheck):
         # area
         mask_maximums = maximums[labels]
 
+        holes = mask_maximums == 4
+        gaps = (mask_maximums < 4) & (mask_maximums > 0)
 
+        self.hole_pixels = np.count_nonzero(holes)
+        self.gap_pixels = np.count_nonzero(gaps)
 
-        # print("convolve2d")
-        # print(c)
-        # print(labels)
-        # print(maximums)
-        # print(mask_maximums)
+        if self.spatial_qajson:
+            self.extents_geojson = ifd.get_extents_feature()
+
+            features = labeled_array_to_geojson(
+                labels,
+                tile,
+                ifd,
+                self.pixel_growth
+            )
+
+            for feature in features:
+                self.tiles_geojson.coordinates.append(
+                    feature.geometry.coordinates
+                )
 
         #
-        # TODO: delete the following and add an actual implementation for this check
-        #
-        self.gap_count = 0
-        self.gap_pixels = 0
-        self.hole_count = 2
-        self.hole_pixels = 2
-
-        self.hole_pixels = np.count_nonzero(mask_maximums == 4)
-        self.gap_pixels = np.count_nonzero((mask_maximums < 4) & (mask_maximums > 0))
-
-
-
-        #
-        # TODO: later, add support for extracting geojson and 'detailed spatial outputs'
+        # TODO: add support for 'detailed spatial outputs'
         #
 
     def get_outputs(self) -> QajsonOutputs:
