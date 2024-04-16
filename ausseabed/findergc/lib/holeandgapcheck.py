@@ -1,12 +1,13 @@
 import geojson
 import logging
 import numpy as np
+from osgeo import gdal
 from scipy.ndimage import label, convolve, maximum
 from numpy.typing import ArrayLike
 from time import perf_counter
 from typing import List
 
-from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson
+from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson, save_raster
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState
@@ -201,9 +202,15 @@ class HoleAndGapCheck(GridCheck):
             spatial_qajson_stop = perf_counter()
             logger.debug(f"Hole and Gap spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start}s")
 
-        #
-        # TODO: add support for 'detailed spatial outputs'
-        #
+        if self.spatial_export:
+            tf = self._get_tmp_file('holes', 'tif', tile)
+            spatial_detailled_start = perf_counter()
+            save_raster(filled_labels, tf, tile, ifd, gdal.GDT_Byte)
+            spatial_detailled_stop = perf_counter()
+            logger.debug(f"Hole and Gap raster export time = {spatial_detailled_stop - spatial_detailled_start}s")
+
+            self._move_tmp_dir()
+
 
     def get_outputs(self) -> QajsonOutputs:
         """ Generate a QAJSON output object that includes the check results

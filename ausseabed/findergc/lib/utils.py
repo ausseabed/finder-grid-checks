@@ -99,7 +99,7 @@ def labeled_array_to_geojson(
         tile.max_x - tile.min_x,
         tile.max_y - tile.min_y,
         1,
-        gdal.GDT_CInt16
+        gdal.GDT_Byte
     )
 
     # grow out failed pixels to make them more obvious. We've already
@@ -169,3 +169,39 @@ def labeled_array_to_geojson(
     ogr_dataset.Destroy()
 
     return features
+
+
+def save_raster(
+        array: np.ndarray,
+        output_file: str,
+        tile: Tile,
+        ifd: InputFileDetails,
+        gdal_datatype = gdal.GDT_Int16
+    ) -> None:
+    """ Save the `array` to the `output_file`
+    """
+    src_affine = Affine.from_gdal(*ifd.geotransform)
+    tile_affine = src_affine * Affine.translation(
+        tile.min_x,
+        tile.min_y
+    )
+
+    tile_ds = gdal.GetDriverByName('GTiff').Create(
+        output_file,
+        tile.max_x - tile.min_x,
+        tile.max_y - tile.min_y,
+        1,
+        gdal_datatype,
+        options=['COMPRESS=DEFLATE']
+    )
+
+    tile_ds.SetGeoTransform(tile_affine.to_gdal())
+
+    tile_band = tile_ds.GetRasterBand(1)
+    tile_band.WriteArray(array, 0, 0)
+    tile_band.SetNoDataValue(0)
+    tile_band.FlushCache()
+    tile_ds.SetProjection(ifd.projection)
+
+    tile_ds = None
+
