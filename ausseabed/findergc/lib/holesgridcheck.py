@@ -140,7 +140,7 @@ class HolesCheck(GridCheck):
             self.hole_pixels += hole_px_count
 
         t1_stop = perf_counter()
-        logger.debug(f"Holes check time = {t1_stop - t1_start}s")
+        logger.debug(f"Holes check time = {t1_stop - t1_start:.4f}s")
 
         if not (self.spatial_export or self.spatial_export_location or self.spatial_qajson):
             # if we don't generate spatial outputs, then there's no
@@ -171,7 +171,7 @@ class HolesCheck(GridCheck):
                 )
 
             spatial_qajson_stop = perf_counter()
-            logger.debug(f"Holes spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start}s")
+            logger.debug(f"Holes spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start:.4f}s")
 
         if self.spatial_export:
             spatial_detailed_start = perf_counter()
@@ -217,7 +217,7 @@ class HolesCheck(GridCheck):
             ogr_dataset.Destroy()
 
             spatial_detailed_stop = perf_counter()
-            logger.debug(f"Holes raster export time = {spatial_detailed_stop - spatial_detailed_start}s")
+            logger.debug(f"Holes raster export time = {spatial_detailed_stop - spatial_detailed_start:.4f}s")
 
             self._move_tmp_dir()
 

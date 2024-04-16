@@ -135,7 +135,7 @@ class HoleAndGapCheck(GridCheck):
         ]
         # now we run the kernel over the mask. Where there's holes we'll end
         # up with a value of 4, but the value 4 won't cover all of the hole
-        c = convolve(mask.astype(int), s, mode='constant', cval=0).astype(int)
+        c = convolve(mask.astype(np.int8), s, mode='constant', cval=0)
 
         # define a structure that will consider only links that share a cell
         # edge (no diagonals).
@@ -180,7 +180,7 @@ class HoleAndGapCheck(GridCheck):
         self.hole_pixels = np.count_nonzero(filled_labels == 2)
 
         t1_stop = perf_counter()
-        logger.debug(f"Hole and Gap check time = {t1_stop - t1_start}s")
+        logger.debug(f"Hole and Gap check time = {t1_stop - t1_start:.4f}s")
 
         if self.spatial_qajson:
             spatial_qajson_start = perf_counter()
@@ -200,14 +200,14 @@ class HoleAndGapCheck(GridCheck):
                 )
 
             spatial_qajson_stop = perf_counter()
-            logger.debug(f"Hole and Gap spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start}s")
+            logger.debug(f"Hole and Gap spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start:.4f}s")
 
         if self.spatial_export:
             tf = self._get_tmp_file('holes', 'tif', tile)
             spatial_detailed_start = perf_counter()
             save_raster(filled_labels, tf, tile, ifd, gdal.GDT_Byte)
             spatial_detailed_stop = perf_counter()
-            logger.debug(f"Hole and Gap raster export time = {spatial_detailed_stop - spatial_detailed_start}s")
+            logger.debug(f"Hole and Gap raster export time = {spatial_detailed_stop - spatial_detailed_start:.4f}s")
 
             self._move_tmp_dir()
 
