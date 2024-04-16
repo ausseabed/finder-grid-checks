@@ -1,6 +1,7 @@
 from affine import Affine
 from osgeo import gdal, ogr, osr
 from scipy.ndimage import find_objects, label
+from time import perf_counter
 from typing import Optional, Dict, List, Any
 import collections
 import geojson
@@ -74,6 +75,8 @@ class HolesCheck(GridCheck):
             progress_callback=None):
         # run check on tile data
 
+        t1_start = perf_counter()
+
         # this check only requires the depth layer, so check it is given
         # if not mark this check as aborted
         self.missing_depth = depth is None
@@ -136,6 +139,9 @@ class HolesCheck(GridCheck):
             self.hole_count += 1
             self.hole_pixels += hole_px_count
 
+        t1_stop = perf_counter()
+        logger.debug(f"Holes check time = {t1_stop - t1_start}s")
+
         if not (self.spatial_export or self.spatial_export_location or self.spatial_qajson):
             # if we don't generate spatial outputs, then there's no
             # need to do any further processing
@@ -148,6 +154,8 @@ class HolesCheck(GridCheck):
         )
 
         if self.spatial_qajson:
+            spatial_qajson_start = perf_counter()
+
             self.extents_geojson = ifd.get_extents_feature()
 
             features = labeled_array_to_geojson(
@@ -162,7 +170,11 @@ class HolesCheck(GridCheck):
                     feature.geometry.coordinates
                 )
 
+            spatial_qajson_stop = perf_counter()
+            logger.debug(f"Holes spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start}s")
+
         if self.spatial_export:
+            spatial_detailed_start = perf_counter()
             tf = self._get_tmp_file('holes', 'tif', tile)
             tile_ds = gdal.GetDriverByName('GTiff').Create(
                 tf,
@@ -203,6 +215,9 @@ class HolesCheck(GridCheck):
 
             tile_ds = None
             ogr_dataset.Destroy()
+
+            spatial_detailed_stop = perf_counter()
+            logger.debug(f"Holes raster export time = {spatial_detailed_stop - spatial_detailed_start}s")
 
             self._move_tmp_dir()
 
