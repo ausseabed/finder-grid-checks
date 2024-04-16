@@ -204,10 +204,10 @@ class HoleAndGapCheck(GridCheck):
 
         if self.spatial_export:
             tf = self._get_tmp_file('holes', 'tif', tile)
-            spatial_detailled_start = perf_counter()
+            spatial_detailed_start = perf_counter()
             save_raster(filled_labels, tf, tile, ifd, gdal.GDT_Byte)
-            spatial_detailled_stop = perf_counter()
-            logger.debug(f"Hole and Gap raster export time = {spatial_detailled_stop - spatial_detailled_start}s")
+            spatial_detailed_stop = perf_counter()
+            logger.debug(f"Hole and Gap raster export time = {spatial_detailed_stop - spatial_detailed_start}s")
 
             self._move_tmp_dir()
 
