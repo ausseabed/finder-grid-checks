@@ -20,6 +20,8 @@ class TestHoleAndGapCheck(unittest.TestCase):
         cls.input_params = [
             QajsonParam("Ignore edge holes", True),
             QajsonParam("Minimum soundings per node", 5),
+            QajsonParam("Gap area threshold (%)", 2),
+            QajsonParam("Hole area threshold (%)", 0),
         ]
 
         # setup a number of test datasets, more details on these
