@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from scipy.ndimage import label, convolve, maximum
 from numpy.typing import ArrayLike
+from time import perf_counter
 from typing import List
 
 from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson
@@ -84,6 +85,8 @@ class HoleAndGapCheck(GridCheck):
             progress_callback=None):
         # run check on tile data
 
+        t1_start = perf_counter()
+
         # this check only requires the density layer, so check it is given
         # if not mark this check as aborted
         # density layer is required as the presence of holes is not indicated
@@ -152,22 +155,39 @@ class HoleAndGapCheck(GridCheck):
         maximums = maximum(c, labels=labels, index=np.arange(1, label_count + 1))
         # the list is zero indexed, but our labels start at one. So we need to insert
         # a lookup table value for the 0 label into this list
-        maximums = np.insert(maximums, 0, 0)
+        maximums = np.insert(maximums, 0, 0).astype(np.uint8)
         # replace all label ids, with the maximum value found for that label in its
         # area
-        mask_maximums = maximums[labels]
+        filled_labels = maximums[labels]
+        # filled labels will now contain values 0 (for neither hole or gap), 1/2/3 for gaps, and
+        # 4 for holes. We use the following bitwise op to convert this to 0 (for nothing), 1 for gaps
+        # and 2 for holes, eg;
+        # 0 -> 0
+        # 1 -> 1
+        # 2 -> 1
+        # 3 -> 1
+        # 4 -> 2
+        # or in binary form
+        # 0000 -> 0000
+        # 0001 -> 0001
+        # 0010 -> 0001
+        # 0011 -> 0001
+        # 0100 -> 0010
+        filled_labels = ((filled_labels & 0b00000010) >> 1 | ((filled_labels & 0b00000001) )) | (filled_labels >> 1)
 
-        holes = mask_maximums == 4
-        gaps = (mask_maximums < 4) & (mask_maximums > 0)
+        self.gap_pixels = np.count_nonzero(filled_labels == 1)
+        self.hole_pixels = np.count_nonzero(filled_labels == 2)
 
-        self.hole_pixels = np.count_nonzero(holes)
-        self.gap_pixels = np.count_nonzero(gaps)
+        t1_stop = perf_counter()
+        logger.debug(f"Hole and Gap check time = {t1_stop - t1_start}s")
 
         if self.spatial_qajson:
+            spatial_qajson_start = perf_counter()
+
             self.extents_geojson = ifd.get_extents_feature()
 
             features = labeled_array_to_geojson(
-                labels,
+                filled_labels,
                 tile,
                 ifd,
                 self.pixel_growth
@@ -177,6 +197,9 @@ class HoleAndGapCheck(GridCheck):
                 self.tiles_geojson.coordinates.append(
                     feature.geometry.coordinates
                 )
+
+            spatial_qajson_stop = perf_counter()
+            logger.debug(f"Hole and Gap spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start}s")
 
         #
         # TODO: add support for 'detailed spatial outputs'
