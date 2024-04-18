@@ -1,13 +1,10 @@
 from typing import List, Dict, NoReturn, Callable, Tuple
-from pathlib import Path
 
-from ausseabed.mbesgc.lib.data import get_input_details, \
-    inputs_from_qajson_checks
+from ausseabed.mbesgc.lib.data import inputs_from_qajson_checks
 from ausseabed.mbesgc.lib.executor import Executor
 from hyo2.qax.lib.plugin import QaxCheckToolPlugin, QaxCheckReference, \
     QaxFileType
-from ausseabed.qajson.model import QajsonRoot, QajsonDataLevel, QajsonCheck, \
-    QajsonFile, QajsonInputs
+from ausseabed.qajson.model import QajsonRoot, QajsonInputs
 
 from ausseabed.findergc.lib.allchecks import all_checks
 

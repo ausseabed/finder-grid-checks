@@ -9,17 +9,11 @@ import click
 import json
 import os
 
-from osgeo import gdal
-from typing import Optional, Dict, List, Any
-
 from ausseabed.mbesgc.app.cli import inputs_from_qajson
-from ausseabed.mbesgc.lib.data import get_input_details, \
-    inputs_from_qajson_checks
+from ausseabed.mbesgc.lib.data import get_input_details
 from ausseabed.mbesgc.lib.executor import Executor
 from ausseabed.mbesgc.lib.check_utils import get_all_check_ids
 from ausseabed.findergc.lib.allchecks import all_checks
-from ausseabed.qajson.parser import QajsonParser
-from ausseabed.qajson.model import QajsonCheck
 
 
 @click.command()
