@@ -1,6 +1,6 @@
 from typing import List, Dict, NoReturn, Callable, Tuple
 
-from ausseabed.mbesgc.lib.data import inputs_from_qajson_checks, get_input_details
+from ausseabed.mbesgc.lib.data import inputs_from_qajson_checks, get_file_details
 from ausseabed.mbesgc.lib.executor import Executor
 from hyo2.qax.lib.plugin import QaxCheckToolPlugin, QaxCheckReference, \
     QaxFileType
@@ -291,11 +291,4 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
         """ Return some details about the raster file that's been provided. In this
         case a list of the bands, and the resolution of the dataset.
         """
-        ifds = get_input_details([filename])
-        band_types = []
-        for ifd in ifds:
-            for (_, _, band_type) in ifd.input_band_details:
-                band_types.append(band_type)
-            band_types.append(f"{ifd.size_x}{chr(0x00D7)}{ifd.size_y}")
-
-        return "\n".join(band_types)
+        return get_file_details(filename)
