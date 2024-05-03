@@ -30,9 +30,9 @@ class TestHoleAndGapCheck(unittest.TestCase):
 
         tc001 = [
             [5, 5, 5, 5, 5, 5],
-            [5, 4, 4, 5, 5, 5],
-            [5, 4, 4, 5, 5, 5],
-            [5, 5, 5, 5, 5, 5],
+            [5, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 5, 5],
             [5, 5, 5, 5, 5, 5],
             [5, 5, 5, 5, 5, 5],
         ]
@@ -58,9 +58,9 @@ class TestHoleAndGapCheck(unittest.TestCase):
 
         tc003 = [
             [5, 5, 5, 5, 5, 5],
-            [5, 4, 5, 5, 5, 5],
             [5, 4, 4, 5, 5, 5],
-            [5, 4, 5, 5, 5, 5],
+            [5, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 5, 5],
             [5, 5, 5, 5, 5, 5],
             [5, 5, 5, 5, 5, 5],
         ]
@@ -74,8 +74,8 @@ class TestHoleAndGapCheck(unittest.TestCase):
             [5, 5, 5, 5, 5, 5],
             [5, 4, 5, 5, 5, 5],
             [5, 4, 4, 5, 5, 5],
-            [5, 5, 5, 5, 5, 5],
-            [5, 5, 5, 5, 5, 5],
+            [5, 4, 4, 5, 5, 5],
+            [5, 4, 4, 5, 5, 5],
             [5, 5, 5, 5, 5, 5],
         ]
         # create a density dataset based on the above array. 
@@ -85,45 +85,48 @@ class TestHoleAndGapCheck(unittest.TestCase):
         )
 
         tc005 = [
-            [5, 5, 5, 5, 5, 5],
-            [5, 4, 4, 5, 5, 5],
-            [5, 4, 4, 5, 5, 5],
-            [5, 5, 5, 5, 4, 5],
-            [5, 5, 5, 4, 5, 5],
-            [5, 5, 5, 5, 5, 5],
+            [5, 5, 5, 5, 5, 5, 5],
+            [5, 4, 4, 4, 5, 5, 5],
+            [5, 4, 4, 4, 5, 5, 5],
+            [5, 4, 4, 4, 5, 5, 5],
+            [5, 5, 5, 5, 5, 4, 5],
+            [5, 5, 5, 5, 4, 5, 5],
+            [5, 5, 5, 5, 5, 5, 5],
         ]
         # create a density dataset based on the above array. 
         cls.tc005 = np.ma.array(
             np.array(tc005, dtype=np.float32),
-            mask=np.full((6, 6), False, dtype=bool)
+            mask=np.full((7, 7), False, dtype=bool)
         )
 
         tc006 = [
-            [5, 5, 5, 5, 5, 5],
-            [5, 4, 5, 5, 5, 5],
-            [5, 4, 4, 4, 5, 5],
-            [5, 4, 4, 4, 5, 5],
-            [5, 4, 4, 4, 5, 5],
-            [5, 5, 5, 5, 5, 5],
+            [5, 5, 5, 5, 5, 5, 5],
+            [5, 4, 5, 5, 5, 5, 5],
+            [5, 4, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 4, 5, 5],
+            [5, 5, 5, 5, 5, 5, 5],
         ]
         # create a density dataset based on the above array. 
         cls.tc006 = np.ma.array(
             np.array(tc006, dtype=np.float32),
-            mask=np.full((6, 6), False, dtype=bool)
+            mask=np.full((7, 7), False, dtype=bool)
         )
 
         tc007 = [
-            [5, 5, 5, 5, 5, 5],
-            [5, 4, 5, 5, 5, 5],
-            [5, 5, 4, 4, 5, 5],
-            [5, 5, 4, 4, 5, 5],
-            [5, 5, 5, 5, 4, 5],
-            [5, 5, 5, 5, 5, 5],
+            [5, 5, 5, 5, 5, 5, 5],
+            [5, 4, 5, 5, 5, 5, 5],
+            [5, 5, 4, 4, 4, 5, 5],
+            [5, 5, 4, 4, 4, 5, 5],
+            [5, 5, 4, 4, 4, 5, 5],
+            [5, 5, 5, 5, 5, 4, 5],
+            [5, 5, 5, 5, 5, 5, 5],
         ]
         # create a density dataset based on the above array. 
         cls.tc007 = np.ma.array(
             np.array(tc007, dtype=np.float32),
-            mask=np.full((6, 6), False, dtype=bool)
+            mask=np.full((7, 7), False, dtype=bool)
         )
 
         tc008 = [
@@ -235,7 +238,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         output = self.run_tc(self.tc001)
 
         # self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 4)
+        self.assertEqual(output.data["total_hole_cell_count"], 9)
         # self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
@@ -253,7 +256,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # self.assertEqual(output.data["total_hole_count"],0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
         # self.assertEqual(output.data["total_gap_count"], 1)
-        self.assertEqual(output.data["total_gap_cell_count"], 4)
+        self.assertEqual(output.data["total_gap_cell_count"], 8)
 
     def test_tc004(self):
         output = self.run_tc(self.tc004)
@@ -261,13 +264,13 @@ class TestHoleAndGapCheck(unittest.TestCase):
         # self.assertEqual(output.data["total_hole_count"],0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
         # self.assertEqual(output.data["total_gap_count"], 1)
-        self.assertEqual(output.data["total_gap_cell_count"], 3)
+        self.assertEqual(output.data["total_gap_cell_count"], 7)
 
     def test_tc005(self):
         output = self.run_tc(self.tc005)
 
         # self.assertEqual(output.data["total_hole_count"],1)
-        self.assertEqual(output.data["total_hole_cell_count"], 4)
+        self.assertEqual(output.data["total_hole_cell_count"], 9)
         # self.assertEqual(output.data["total_gap_count"], 1)
         self.assertEqual(output.data["total_gap_cell_count"], 2)
 
@@ -275,7 +278,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         output = self.run_tc(self.tc006)
 
         # self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 10)
+        self.assertEqual(output.data["total_hole_cell_count"], 17)
         # self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
@@ -283,15 +286,15 @@ class TestHoleAndGapCheck(unittest.TestCase):
         output = self.run_tc(self.tc007)
 
         # self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 4)
+        self.assertEqual(output.data["total_hole_cell_count"], 11)
         # self.assertEqual(output.data["total_gap_count"], 0)
-        self.assertEqual(output.data["total_gap_cell_count"], 2)
+        self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc008(self):
         output = self.run_tc(self.tc008)
 
         # self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 9)
+        self.assertEqual(output.data["total_hole_cell_count"], 0)
         # self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
@@ -307,9 +310,9 @@ class TestHoleAndGapCheck(unittest.TestCase):
         output = self.run_tc(self.tc010)
 
         # self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 8)
+        self.assertEqual(output.data["total_hole_cell_count"], 0)
         # self.assertEqual(output.data["total_gap_count"], 0)
-        self.assertEqual(output.data["total_gap_cell_count"], 0)
+        self.assertEqual(output.data["total_gap_cell_count"], 8)
 
     def test_tc011(self):
         output = self.run_tc(self.tc011)
@@ -323,6 +326,6 @@ class TestHoleAndGapCheck(unittest.TestCase):
         output = self.run_tc(self.tc012)
 
         # self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 9)
+        self.assertEqual(output.data["total_hole_cell_count"], 10)
         # self.assertEqual(output.data["total_gap_count"], 0)
-        self.assertEqual(output.data["total_gap_cell_count"], 1)
+        self.assertEqual(output.data["total_gap_cell_count"], 0)

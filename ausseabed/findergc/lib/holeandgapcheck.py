@@ -126,22 +126,23 @@ class HoleAndGapCheck(GridCheck):
         if pinkchart is not None:
             mask = (mask & pinkchart)
 
-        # we want to identify groups of cells that are 2x2 in size, each
+        # we want to identify groups of cells that are 3x3 in size, each
         # hole must have at least one of these in them to be classified
         # a hole
         s = [
-            [1, 1],
-            [1, 1],
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1],
         ]
         # now we run the kernel over the mask. Where there's holes we'll end
         # up with a value of 4, but the value 4 won't cover all of the hole
         c = convolve(mask.astype(np.int8), s, mode='constant', cval=0)
 
-        # define a structure that will consider only links that share a cell
-        # edge (no diagonals).
-        s = [[0, 1, 0],
+        # define a structure that will consider all links (adjacent and
+        # diagonal) between cells
+        s = [[1, 1, 1],
              [1, 1, 1],
-             [0, 1, 0]]
+             [1, 1, 1]]
         # use label to uniquely identify each contiguous hole, this
         # gives each hole a unique id (label)
         labels, label_count = label(mask, structure=s, output=np.int32)
@@ -150,7 +151,7 @@ class HoleAndGapCheck(GridCheck):
             remove_edge_labels(labels)
 
         # find the maximum value of the convolution result for each one of the
-        # labeled regions. A labeled region is a hole if this value is 4 in
+        # labeled regions. A labeled region is a hole if this value is 9 in
         # at least one of the cells
         # we get a list of maximums where the index is the label from this function
         maximums = maximum(c, labels=labels, index=np.arange(1, label_count + 1))
@@ -160,22 +161,14 @@ class HoleAndGapCheck(GridCheck):
         # replace all label ids, with the maximum value found for that label in its
         # area
         filled_labels = maximums[labels]
-        # filled labels will now contain values 0 (for neither hole or gap), 1/2/3 for gaps, and
-        # 4 for holes. We use the following bitwise op to convert this to 0 (for nothing), 1 for gaps
-        # and 2 for holes, eg;
-        # 0 -> 0
-        # 1 -> 1
-        # 2 -> 1
-        # 3 -> 1
-        # 4 -> 2
-        # or in binary form
-        # 0000 -> 0000
-        # 0001 -> 0001
-        # 0010 -> 0001
-        # 0011 -> 0001
-        # 0100 -> 0010
-        filled_labels = ((filled_labels & 0b00000010) >> 1 | ((filled_labels & 0b00000001) )) | (filled_labels >> 1)
+        # filled labels will now contain values 0 (for neither hole or gap), 1-8 for gaps, and
+        # 9 for holes.
 
+        # now simplify the numbering so that gaps == 1, and holes == 2
+        filled_labels[(filled_labels < 9) & (filled_labels > 0)] = 1
+        filled_labels[filled_labels == 9] = 2
+
+        # extract counts
         self.gap_pixels = np.count_nonzero(filled_labels == 1)
         self.hole_pixels = np.count_nonzero(filled_labels == 2)
 
