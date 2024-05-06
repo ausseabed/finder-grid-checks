@@ -199,6 +199,21 @@ class TestHoleAndGapCheck(unittest.TestCase):
             mask=np.full((6, 6), False, dtype=bool)
         )
 
+        tc013 = [
+            [5, 5, 5, 5, 5, 5, 5],
+            [5, 4, 5, 4, 4, 5, 5],
+            [5, 4, 5, 5, 5, 5, 5],
+            [5, 5, 5, 4, 4, 4, 5],
+            [5, 4, 5, 5, 5, 5, 5],
+            [5, 5, 4, 4, 5, 4, 5],
+            [5, 5, 5, 5, 5, 5, 5],
+        ]
+        # create a density dataset based on the above array.
+        cls.tc013 = np.ma.array(
+            np.array(tc013, dtype=np.float32),
+            mask=np.full((7, 7), False, dtype=bool)
+        )
+
     def get_tc_data(self, density: ma.MaskedArray) -> tuple[InputFileDetails, Tile]:
         """ Helper function to create some of the object we need to be able to run
         the check over
@@ -237,95 +252,103 @@ class TestHoleAndGapCheck(unittest.TestCase):
     def test_tc001(self):
         output = self.run_tc(self.tc001)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 1)
         self.assertEqual(output.data["total_hole_cell_count"], 9)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc002(self):
         output = self.run_tc(self.tc002)
 
-        # self.assertEqual(output.data["total_hole_count"],0)
+        self.assertEqual(output.data["total_hole_count"],0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
-        # self.assertEqual(output.data["total_gap_count"], 1)
+        self.assertEqual(output.data["total_gap_count"], 1)
         self.assertEqual(output.data["total_gap_cell_count"], 4)
 
     def test_tc003(self):
         output = self.run_tc(self.tc003)
 
-        # self.assertEqual(output.data["total_hole_count"],0)
+        self.assertEqual(output.data["total_hole_count"],0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
-        # self.assertEqual(output.data["total_gap_count"], 1)
+        self.assertEqual(output.data["total_gap_count"], 1)
         self.assertEqual(output.data["total_gap_cell_count"], 8)
 
     def test_tc004(self):
         output = self.run_tc(self.tc004)
 
-        # self.assertEqual(output.data["total_hole_count"],0)
+        self.assertEqual(output.data["total_hole_count"],0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
-        # self.assertEqual(output.data["total_gap_count"], 1)
+        self.assertEqual(output.data["total_gap_count"], 1)
         self.assertEqual(output.data["total_gap_cell_count"], 7)
 
     def test_tc005(self):
         output = self.run_tc(self.tc005)
 
-        # self.assertEqual(output.data["total_hole_count"],1)
+        self.assertEqual(output.data["total_hole_count"],1)
         self.assertEqual(output.data["total_hole_cell_count"], 9)
-        # self.assertEqual(output.data["total_gap_count"], 1)
+        self.assertEqual(output.data["total_gap_count"], 1)
         self.assertEqual(output.data["total_gap_cell_count"], 2)
 
     def test_tc006(self):
         output = self.run_tc(self.tc006)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 1)
         self.assertEqual(output.data["total_hole_cell_count"], 17)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc007(self):
         output = self.run_tc(self.tc007)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 1)
         self.assertEqual(output.data["total_hole_cell_count"], 11)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc008(self):
         output = self.run_tc(self.tc008)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc009(self):
         output = self.run_tc(self.tc009)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 1)
         self.assertEqual(output.data["total_hole_cell_count"], 16)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc010(self):
         output = self.run_tc(self.tc010)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 1)
         self.assertEqual(output.data["total_gap_cell_count"], 8)
 
     def test_tc011(self):
         output = self.run_tc(self.tc011)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 0)
         self.assertEqual(output.data["total_hole_cell_count"], 0)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
     def test_tc012(self):
         output = self.run_tc(self.tc012)
 
-        # self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_count"], 1)
         self.assertEqual(output.data["total_hole_cell_count"], 10)
-        # self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 0)
         self.assertEqual(output.data["total_gap_cell_count"], 0)
+
+    def test_tc013(self):
+        output = self.run_tc(self.tc013)
+
+        self.assertEqual(output.data["total_hole_count"], 0)
+        self.assertEqual(output.data["total_hole_cell_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 5)
+        self.assertEqual(output.data["total_gap_cell_count"], 11)

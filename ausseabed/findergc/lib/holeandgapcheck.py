@@ -1,3 +1,4 @@
+import collections
 import geojson
 import logging
 import numpy as np
@@ -69,11 +70,47 @@ class HoleAndGapCheck(GridCheck):
         self.gap_pixels += last_check.gap_pixels
         self.total_cell_count += last_check.total_cell_count
 
+        self.hole_hist = self.__merge_hist(self.hole_hist, last_check.hole_hist)
+        self.gap_hist = self.__merge_hist(self.hole_hist, last_check.gap_hist)
+
         self.tiles_geojson.coordinates.extend(
             last_check.tiles_geojson.coordinates
         )
 
         self._merge_temp_dirs(last_check)
+
+    def __calc_count_and_histogram(self, arr: np.array) -> tuple[int, dict[int,  int]]:
+        """ extracts the number of unique holes (or gaps) and also returns a
+        histogram that details number of holes with how many cells
+        """
+        unique_vals, unique_counts = np.unique(arr, return_counts=True)
+        unique_count = len(unique_vals)
+        count_uniques = np.unique(unique_counts, return_counts=True)
+
+        hist = {}
+        for (val, count) in zip(*count_uniques):
+            hist[int(val)] = int(count)
+
+        return unique_count, hist
+
+    def __merge_hist(self, hist_1: dict[int, int], hist_2:dict[int, int]) -> dict[int, int]:
+        """ Merges the contents of two histograms together. If both histograms contain
+        the same key, then the values for this key are added together.
+        """
+        merged: dict[int, int] = dict(hist_1)
+        for (k, v) in hist_2.items():
+            if k in merged:
+                merged[k] += v
+            else:
+                merged[k] = v
+        return merged
+
+    def __hist_to_json_compatible(self, h: dict[int, int]) -> dict[str, int]:
+        ordered_hist = collections.OrderedDict(h)
+        res = collections.OrderedDict()
+        for key, val in ordered_hist.items():
+            res[str(key)] = val
+        return res
 
     def run(
             self,
@@ -114,6 +151,12 @@ class HoleAndGapCheck(GridCheck):
         self.gap_count = 0
         # number of pixels in all the data gaps found
         self.gap_pixels = 0
+
+        # histogram details for holes and gaps
+        # key is the number of cells in the hole/gaps, value
+        # is the number of holes/gaps with that number of cells
+        self.hole_hist: dict[int, int] = {}
+        self.gap_hist: dict[int, int] = {}
 
         if self.total_cell_count == 0:
             return
@@ -168,9 +211,12 @@ class HoleAndGapCheck(GridCheck):
         filled_labels[(filled_labels < 9) & (filled_labels > 0)] = 1
         filled_labels[filled_labels == 9] = 2
 
-        # extract counts
+        # extract pixel counts
         self.gap_pixels = np.count_nonzero(filled_labels == 1)
         self.hole_pixels = np.count_nonzero(filled_labels == 2)
+
+        self.gap_count, self.gap_hist = self.__calc_count_and_histogram(labels[filled_labels == 1])
+        self.hole_count, self.hole_hist = self.__calc_count_and_histogram(labels[filled_labels == 2])
 
         t1_stop = perf_counter()
         logger.debug(f"Hole and Gap check time = {t1_stop - t1_start:.4f}s")
@@ -233,6 +279,19 @@ class HoleAndGapCheck(GridCheck):
             gap_fraction = self.gap_pixels / self.total_cell_count
             hole_fraction = self.hole_pixels / self.total_cell_count
 
+        charts = [
+            {
+                'type': 'histogram',
+                'data': self.__hist_to_json_compatible(self.hole_hist),
+                'title': 'Hole size distribution'
+            },
+            {
+                'type': 'histogram',
+                'data': self.__hist_to_json_compatible(self.gap_hist),
+                'title': 'Gap size distribution'
+            },
+        ]
+
         if self.execution_status == "aborted":
             check_state = GridCheckState.cs_fail
         elif hole_fraction > self.hole_area_threshold or gap_fraction > self.gap_area_threshold:
@@ -248,9 +307,11 @@ class HoleAndGapCheck(GridCheck):
                     f"Percentage area identified as gaps was found to be {gap_fraction*100.0:.5f}% "
                     f"({self.gap_pixels} cells), this exceeds the threshold of {self.gap_area_threshold*100}%"
                 )
+            data['charts'] = charts
         else:
             check_state = GridCheckState.cs_pass
             messages = ["Total area of holes and gaps are under acceptable thresholds"]
+            data['charts'] = charts
 
         return QajsonOutputs(
             execution=execution,
