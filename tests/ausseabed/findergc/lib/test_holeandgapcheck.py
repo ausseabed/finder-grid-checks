@@ -214,6 +214,75 @@ class TestHoleAndGapCheck(unittest.TestCase):
             mask=np.full((7, 7), False, dtype=bool)
         )
 
+        tc020 = [
+            [5, 5, 5, 5, 5, 4],
+            [5, 5, 5, 5, 5, 4],
+            [5, 5, 5, 5, 5, 4],
+            [5, 5, 5, 4, 4, 4],
+            [5, 5, 5, 4, 4, 4],
+            [5, 5, 5, 4, 4, 4],
+        ]
+        cls.tc020 = np.ma.array(
+            np.array(tc020, dtype=np.float32),
+            mask=np.full((6, 6), False, dtype=bool)
+        )
+        tc020_pc = [
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+        ]
+        cls.tc020_pc = np.array(tc020_pc, dtype=np.ubyte)
+
+
+        tc021 = [
+            [5, 5, 5, 5, 5, 5],
+            [5, 5, 5, 5, 5, 5],
+            [5, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 5, 5],
+            [5, 4, 4, 4, 5, 5],
+            [5, 5, 5, 5, 5, 5],
+        ]
+        cls.tc021 = np.ma.array(
+            np.array(tc021, dtype=np.float32),
+            mask=np.full((6, 6), False, dtype=bool)
+        )
+        tc021_pc = [
+            [1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0],
+        ]
+        cls.tc021_pc = np.array(tc021_pc, dtype=np.ubyte)
+
+        tc022 = [
+            [5, 5, 5, 5, 5, 5],
+            [5, 4, 4, 4, 4, 5],
+            [5, 4, 4, 4, 4, 5],
+            [5, 4, 4, 4, 4, 5],
+            [5, 4, 4, 4, 4, 5],
+            [5, 5, 5, 5, 5, 5],
+        ]
+        cls.tc022 = np.ma.array(
+            np.array(tc022, dtype=np.float32),
+            mask=np.full((6, 6), False, dtype=bool)
+        )
+        tc022_pc = [
+            [1, 1, 0, 0, 0, 0],
+            [1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 1, 0, 0],
+            [1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+        ]
+        cls.tc022_pc = np.array(tc022_pc, dtype=np.ubyte)
+
+
+
     def get_tc_data(self, density: ma.MaskedArray) -> tuple[InputFileDetails, Tile]:
         """ Helper function to create some of the object we need to be able to run
         the check over
@@ -228,7 +297,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         tc_tile = Tile(0, 0, size_x, size_y)
         return tc_ifd, tc_tile
 
-    def run_tc(self, tc_density: ma.MaskedArray) -> dict:
+    def run_tc(self, tc_density: ma.MaskedArray, tc_pinkchart: np.array = None) -> dict:
         """ Helper function to run the test case density array through the
         HoleAndGapCheck class, returning the output dict
         """
@@ -241,7 +310,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
             depth=None,
             density=tc_density,
             uncertainty=None,
-            pinkchart=None
+            pinkchart=tc_pinkchart
         )
         # it's usually the check executor that assigns execution_status, but we're
         # just calling the run method direct here so need to do it ourselves
@@ -352,3 +421,33 @@ class TestHoleAndGapCheck(unittest.TestCase):
         self.assertEqual(output.data["total_hole_cell_count"], 0)
         self.assertEqual(output.data["total_gap_count"], 5)
         self.assertEqual(output.data["total_gap_cell_count"], 11)
+
+    def test_tc020(self):
+        output = self.run_tc(self.tc020, self.tc020_pc)
+
+        self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_cell_count"], 12)
+        self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_cell_count"], 0)
+
+        self.assertEqual(output.data["total_cell_count"], 36)
+
+    def test_tc021(self):
+        output = self.run_tc(self.tc021, self.tc021_pc)
+
+        self.assertEqual(output.data["total_hole_count"], 0)
+        self.assertEqual(output.data["total_hole_cell_count"], 0)
+        self.assertEqual(output.data["total_gap_count"], 1)
+        self.assertEqual(output.data["total_gap_cell_count"], 6)
+
+        self.assertEqual(output.data["total_cell_count"], 18)
+
+    def test_tc022(self):
+        output = self.run_tc(self.tc022, self.tc022_pc)
+
+        self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_cell_count"], 13)
+        self.assertEqual(output.data["total_gap_count"], 0)
+        self.assertEqual(output.data["total_gap_cell_count"], 0)
+
+        self.assertEqual(output.data["total_cell_count"], 26)
