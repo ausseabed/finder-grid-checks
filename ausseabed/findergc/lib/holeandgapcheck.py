@@ -137,6 +137,15 @@ class HoleAndGapCheck(GridCheck):
             # we cant run the check so return
             return
 
+        if pinkchart is not None:
+            if self.ignore_edges:
+                logger.info(
+                    "Ignore edges was set to True, but a coverage area file has been specified. "
+                    "This setting will be ignored as the coverage area determines the edges of the "
+                    "dataset."
+                )
+            self.ignore_edges = False
+
         # if there's no pink chart data then use the number of non-nodata cells
         # as the cell count. Otherwise count the number of pinkchart cells
         self.total_cell_count = int(density.count())
