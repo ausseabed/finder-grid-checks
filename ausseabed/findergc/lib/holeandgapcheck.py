@@ -217,15 +217,15 @@ class HoleAndGapCheck(GridCheck):
         # 9 for holes.
 
         # now simplify the numbering so that gaps == 1, and holes == 2
-        filled_labels[(filled_labels < 9) & (filled_labels > 0)] = 1
-        filled_labels[filled_labels == 9] = 2
+        gaps = ((filled_labels < 9) & (filled_labels > 0)).astype(np.int8)
+        holes = (filled_labels == 9).astype(np.int8)
 
         # extract pixel counts
-        self.gap_pixels = np.count_nonzero(filled_labels == 1)
-        self.hole_pixels = np.count_nonzero(filled_labels == 2)
+        self.gap_pixels = np.count_nonzero(gaps)
+        self.hole_pixels = np.count_nonzero(holes)
 
-        self.gap_count, self.gap_hist = self.__calc_count_and_histogram(labels[filled_labels == 1])
-        self.hole_count, self.hole_hist = self.__calc_count_and_histogram(labels[filled_labels == 2])
+        self.gap_count, self.gap_hist = self.__calc_count_and_histogram(gaps)
+        self.hole_count, self.hole_hist = self.__calc_count_and_histogram(holes)
 
         t1_stop = perf_counter()
         logger.debug(f"Hole and Gap check time = {t1_stop - t1_start:.4f}s")
@@ -236,7 +236,7 @@ class HoleAndGapCheck(GridCheck):
             self.extents_geojson = ifd.get_extents_feature()
 
             features = labeled_array_to_geojson(
-                filled_labels,
+                gaps + holes,
                 tile,
                 ifd,
                 self.pixel_growth
@@ -251,9 +251,11 @@ class HoleAndGapCheck(GridCheck):
             logger.debug(f"Hole and Gap spatial QAJSON time = {spatial_qajson_stop - spatial_qajson_start:.4f}s")
 
         if self.spatial_export:
-            tf = self._get_tmp_file('holes', 'tif', tile)
             spatial_detailed_start = perf_counter()
-            save_raster(filled_labels, tf, tile, ifd, gdal.GDT_Byte)
+            tf_holes = self._get_tmp_file('holes', 'tif', tile)
+            save_raster(holes, tf_holes, tile, ifd, gdal.GDT_Byte)
+            tf_gaps = self._get_tmp_file('gaps', 'tif', tile)
+            save_raster(gaps, tf_gaps, tile, ifd, gdal.GDT_Byte)
             spatial_detailed_stop = perf_counter()
             logger.debug(f"Hole and Gap raster export time = {spatial_detailed_stop - spatial_detailed_start:.4f}s")
 
