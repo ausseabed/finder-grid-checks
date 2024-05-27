@@ -177,7 +177,7 @@ def save_raster(
         tile: Tile,
         ifd: InputFileDetails,
         gdal_datatype = gdal.GDT_Int16
-    ) -> None:
+    ) -> gdal.Dataset:
     """ Save the `array` to the `output_file`
     """
     src_affine = Affine.from_gdal(*ifd.geotransform)
@@ -203,5 +203,36 @@ def save_raster(
     tile_band.FlushCache()
     tile_ds.SetProjection(ifd.projection)
 
-    tile_ds = None
+    return tile_ds
 
+
+def save_raster_as_vector(
+        dataset: gdal.Dataset,
+        output_file: str,
+        layer_name: str,
+    ) -> None:
+    """ polygonizes the input raster dataset and saves it to a shapefile
+    """
+    # for now assume always band 1 (the first band)
+    band = dataset.GetRasterBand(1)
+
+    ogr_srs = osr.SpatialReference()
+    ogr_srs.ImportFromWkt(dataset.GetProjection())
+
+    ogr_driver = ogr.GetDriverByName("ESRI Shapefile")
+    ogr_dataset = ogr_driver.CreateDataSource(output_file)
+    ogr_layer = ogr_dataset.CreateLayer(layer_name, srs=ogr_srs)
+
+    # used the input raster data 'tile_band' as the input and mask, if not
+    # used as a mask then a feature that outlines the entire dataset is
+    # also produced
+    gdal.Polygonize(
+        band,
+        band,
+        ogr_layer,
+        -1,
+        [],
+        callback=None
+    )
+
+    ogr_dataset.Destroy()

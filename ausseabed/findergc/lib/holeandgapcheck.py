@@ -8,7 +8,8 @@ from numpy.typing import ArrayLike
 from time import perf_counter
 from typing import List
 
-from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson, save_raster
+from ausseabed.findergc.lib.utils import  \
+    remove_edge_labels, labeled_array_to_geojson, save_raster, save_raster_as_vector
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState
@@ -252,10 +253,15 @@ class HoleAndGapCheck(GridCheck):
 
         if self.spatial_export:
             spatial_detailed_start = perf_counter()
-            tf_holes = self._get_tmp_file('holes', 'tif', tile)
-            save_raster(holes, tf_holes, tile, ifd, gdal.GDT_Byte)
-            tf_gaps = self._get_tmp_file('gaps', 'tif', tile)
-            save_raster(gaps, tf_gaps, tile, ifd, gdal.GDT_Byte)
+            tf_holes_raster = self._get_tmp_file('holes', 'tif', tile)
+            holes_ds = save_raster(holes, tf_holes_raster, tile, ifd, gdal.GDT_Byte)
+            tf_holes_vector = self._get_tmp_file('holes', 'shp', tile)
+            save_raster_as_vector(holes_ds, tf_holes_vector, 'holes')
+
+            tf_gaps_raster = self._get_tmp_file('gaps', 'tif', tile)
+            gaps_ds = save_raster(gaps, tf_gaps_raster, tile, ifd, gdal.GDT_Byte)
+            tf_gaps_vector = self._get_tmp_file('gaps', 'shp', tile)
+            save_raster_as_vector(gaps_ds, tf_gaps_vector, 'gaps')
             spatial_detailed_stop = perf_counter()
             logger.debug(f"Hole and Gap raster export time = {spatial_detailed_stop - spatial_detailed_start:.4f}s")
 
