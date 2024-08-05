@@ -84,15 +84,21 @@ class HoleAndGapCheck(GridCheck):
         """ extracts the number of unique holes (or gaps) and also returns a
         histogram that details number of holes with how many cells
         """
-        unique_vals, unique_counts = np.unique(arr, return_counts=True)
-        unique_count = len(unique_vals)
-        count_uniques = np.unique(unique_counts, return_counts=True)
+        s = [[1, 1, 1],
+             [1, 1, 1],
+             [1, 1, 1]]
+        labels, nlabels = label(arr, structure=s, output=np.int32)
+
+        # np histogram uses half-open bins except for the final bin which is full open
+        # as such, nlabels +2 gives [0, 1, 2, 3] bins for labels [0, 1, 2]
+        bins = range(0, nlabels+2)
+        h, _ = np.histogram(labels, bins=bins)
 
         hist = {}
-        for (val, count) in zip(*count_uniques):
-            hist[int(val)] = int(count)
+        for i in range(nlabels+1):
+            hist[i] = int(h[i])
 
-        return unique_count, hist
+        return nlabels, hist
 
     def __merge_hist(self, hist_1: dict[int, int], hist_2:dict[int, int]) -> dict[int, int]:
         """ Merges the contents of two histograms together. If both histograms contain

@@ -281,6 +281,25 @@ class TestHoleAndGapCheck(unittest.TestCase):
         ]
         cls.tc022_pc = np.array(tc022_pc, dtype=np.ubyte)
 
+        tc023 = [
+           [14, 19, 17, 18, 13,  4, 11,  5,  0, 13, 21, 21],
+           [13, 20, 16, 14,  6,  2, 15,  8,  4, 21, 30, 29],
+           [11, 14, 16, 13, 14, 10, 16,  7,  3, 22, 30, 26],
+           [ 7,  6,  8, 12, 15, 17, 20, 19,  7, 11, 19, 25],
+           [ 8,  3,  5, 12, 19, 20, 20, 24, 21, 23, 24, 23],
+           [ 7,  4,  3,  2,  3, 11, 25, 22, 21, 23, 22, 21],
+           [ 8,  5,  3,  1,  0,  4, 13, 17, 23, 25, 25, 23],
+           [16, 11,  2,  1,  1,  3,  7,  8, 22, 23, 15, 22],
+           [20, 12,  2,  0,  0,  3,  9, 13, 24, 39, 25, 22],
+           [16, 12, 11,  3,  0,  6, 11, 17, 19, 26, 22, 24],
+           [ 6, 10, 14, 13,  6,  4,  7, 12, 21, 33, 33, 27],
+           [ 5, 12, 16, 11, 11, 13, 11,  9, 24, 32, 29, 26],
+           [ 5,  9, 15, 10,  8, 16, 15, 17, 27, 21, 16, 10],
+        ]
+        arr = np.array(tc023, dtype=np.float32)
+        mask = arr == 0
+        cls.tc023 = np.ma.array(arr, mask=mask)
+
 
 
     def get_tc_data(self, density: ma.MaskedArray) -> tuple[InputFileDetails, Tile]:
@@ -451,3 +470,13 @@ class TestHoleAndGapCheck(unittest.TestCase):
         self.assertEqual(output.data["total_gap_cell_count"], 0)
 
         self.assertEqual(output.data["total_cell_count"], 26)
+
+    def test_tc023(self):
+        output = self.run_tc(self.tc023)
+
+        self.assertEqual(output.data["total_hole_count"], 1)
+        self.assertEqual(output.data["total_hole_cell_count"], 136)
+        self.assertEqual(output.data["total_gap_count"], 2)
+        self.assertEqual(output.data["total_gap_cell_count"], 5)
+
+        self.assertEqual(output.data["total_cell_count"], 156)
