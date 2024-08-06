@@ -32,28 +32,19 @@ class TestHolidays(unittest.TestCase):
         depth_data = np.random.uniform(
             low=11.0,
             high=21.0,
-            size=(
-                len(mask),
-                len(mask[0])
-            )
+            size=mask.shape
         )
 
         density_data = np.random.uniform(
             low=1.0,
             high=10.0,
-            size=(
-                len(mask),
-                len(mask[0])
-            )
+            size=mask.shape
         )
 
         uncertainty_data = np.random.uniform(
             low=0.5,
             high=0.9,
-            size=(
-                len(mask),
-                len(mask[0])
-            )
+            size=mask.shape
         )
 
         cls.depth = np.ma.array(
@@ -70,12 +61,12 @@ class TestHolidays(unittest.TestCase):
         )
 
         cls.dummy_ifd = InputFileDetails()
-        cls.dummy_ifd.size_x = len(mask)
-        cls.dummy_ifd.size_y = len(mask[0])
+        cls.dummy_ifd.size_y = len(mask)
+        cls.dummy_ifd.size_x = len(mask[0])
         cls.dummy_ifd.geotransform = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         cls.dummy_ifd.projection = ('GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.01745329251994328,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]')  # noqa
 
-        cls.dummy_tile = Tile(0, 0, len(mask), len(mask[0]))
+        cls.dummy_tile = Tile(0, 0, len(mask[0]), len(mask))
 
     def test_holescheck_with_edges(self):
         input_params = [
@@ -128,7 +119,7 @@ class TestHolidays(unittest.TestCase):
         ]
         mask = np.array(mask)
         mask = (mask == 1)
-        depth_data = np.random.uniform(low=11.0, high=21.0, size=(len(mask), len(mask[0])))
+        depth_data = np.random.uniform(low=11.0, high=21.0, size=mask.shape)
         depth = np.ma.array(
             np.array(depth_data, dtype=np.float32),
             mask=mask
