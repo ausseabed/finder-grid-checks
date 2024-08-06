@@ -282,6 +282,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         cls.tc022_pc = np.array(tc022_pc, dtype=np.ubyte)
 
         tc023 = [
+           [19, 18, 14, 16, 18, 17, 11,  8,  5,  8, 15, 20],
            [14, 19, 17, 18, 13,  4, 11,  5,  0, 13, 21, 21],
            [13, 20, 16, 14,  6,  2, 15,  8,  4, 21, 30, 29],
            [11, 14, 16, 13, 14, 10, 16,  7,  3, 22, 30, 26],
@@ -306,7 +307,7 @@ class TestHoleAndGapCheck(unittest.TestCase):
         """ Helper function to create some of the object we need to be able to run
         the check over
         """
-        size_x, size_y = density.shape
+        size_y, size_x = density.shape
 
         tc_ifd = InputFileDetails()
         tc_ifd.size_x = size_x
@@ -475,8 +476,8 @@ class TestHoleAndGapCheck(unittest.TestCase):
         output = self.run_tc(self.tc023)
 
         self.assertEqual(output.data["total_hole_count"], 1)
-        self.assertEqual(output.data["total_hole_cell_count"], 136)
+        self.assertEqual(output.data["total_hole_cell_count"], 20)
         self.assertEqual(output.data["total_gap_count"], 2)
         self.assertEqual(output.data["total_gap_cell_count"], 5)
 
-        self.assertEqual(output.data["total_cell_count"], 156)
+        self.assertEqual(output.data["total_cell_count"], 163)
