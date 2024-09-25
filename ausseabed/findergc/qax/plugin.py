@@ -160,11 +160,7 @@ class FinderGridChecksQaxPlugin(QaxCheckToolPlugin):
                 hole_data = hole_check.outputs.data
                 total_cells = hole_data['total_cell_count']
                 hole_cells = hole_data['total_hole_cell_count']
-                # the total cells is a count of all non-nodata cells, it therefore
-                # wont include the hole cells. So to get the actual total cell count
-                # we add the number of cells in holes to the number of non-nodata
-                # cells.
-                percentage_hole = (hole_cells) / (total_cells + hole_cells) * 100
+                percentage_hole = hole_cells / total_cells * 100
                 return percentage_hole
             else:
                 return "No hole check"
