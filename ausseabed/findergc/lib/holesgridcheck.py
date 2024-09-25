@@ -148,6 +148,12 @@ class HolesCheck(GridCheck):
             self.hole_count += 1
             self.hole_pixels += hole_px_count
 
+        if pinkchart is None:
+            # the total count needs updating to include the identified holes
+            # otherwise it is purely a count of all non-nodata cells
+            # pinkchart cases are ok, as the coverage itself will define the total count
+            self.total_cell_count += self.hole_pixels
+
         t1_stop = perf_counter()
         logger.debug(f"Holes check time = {t1_stop - t1_start:.4f}s")
 
