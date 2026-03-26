@@ -6,9 +6,16 @@ authors = [
     { name = "Lachlan Hurst", email = "lachlan.hurst@gmail.com" },
 ]
 dependencies = [
-    "click",
     "ausseabed.qajson",
     "ausseabed.mbesgc",
+    "affine",
+    "click",
+    "numpy",
+    "scipy",
+    "gdal",
+    "numba",
+    "numexpr",
+    "geojson"
 ]
 
 [project.urls]
