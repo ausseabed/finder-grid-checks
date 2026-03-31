@@ -1,9 +1,8 @@
 from affine import Affine
 from osgeo import gdal, ogr, osr
-from scipy.ndimage import find_objects, label
+from scipy.ndimage import label
 from time import perf_counter
-from typing import Optional, Dict, List, Any
-import collections
+from typing import List
 import geojson
 from geojson import MultiPolygon
 import logging
@@ -12,8 +11,7 @@ import numpy.ma as ma
 
 from ausseabed.findergc.lib.utils import remove_edge_labels, labeled_array_to_geojson
 from ausseabed.mbesgc.lib.data import InputFileDetails
-from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState, \
-    GridCheckResult
+from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState
 from ausseabed.mbesgc.lib.tiling import Tile
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 

@@ -1,16 +1,13 @@
 from affine import Affine
-from osgeo import gdal, ogr, osr
+from osgeo import gdal, osr
 from scipy import ndimage
-from typing import Optional, Dict, List, Any
-import collections
+from typing import List
 import geojson
 import logging
 import numpy as np
-import numpy.ma as ma
 
 from ausseabed.mbesgc.lib.data import InputFileDetails
-from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState, \
-    GridCheckResult
+from ausseabed.mbesgc.lib.gridcheck import GridCheck, GridCheckState
 from ausseabed.mbesgc.lib.tiling import Tile
 from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
 
