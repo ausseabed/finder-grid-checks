@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 import unittest
-
+import json
 
 from ausseabed.qajson.model import QajsonParam
 from ausseabed.mbesgc.lib.data import InputFileDetails
@@ -339,6 +339,9 @@ class TestHoleAndGapCheck(unittest.TestCase):
 
     def test_tc001(self):
         output = self.run_tc(self.tc001)
+        
+        # check it serializes to JSON ok
+        assert json.dumps(output.data) is not None
 
         self.assertEqual(output.data["total_hole_count"], 1)
         self.assertEqual(output.data["total_hole_cell_count"], 9)

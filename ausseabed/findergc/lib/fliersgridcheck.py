@@ -211,19 +211,19 @@ class FliersCheck(GridCheck):
         # tile_ds.SetProjection(ifd.projection)
 
         # laplacian_operator check uses 1 as its flag value
-        self.failed_cell_laplacian_operator = np.count_nonzero(flag_grid == 1)
+        self.failed_cell_laplacian_operator = int(np.count_nonzero(flag_grid == 1))
         # gaussian_curvature check uses 2 as its flag value
-        self.failed_cell_gaussian_curvature = np.count_nonzero(flag_grid == 2)
+        self.failed_cell_gaussian_curvature = int(np.count_nonzero(flag_grid == 2))
         # adjacent cells uses 3 as its flag value
-        self.failed_cell_adjacent_cells = np.count_nonzero(flag_grid == 3)
+        self.failed_cell_adjacent_cells = int(np.count_nonzero(flag_grid == 3))
         if self._sg_check_slivers:
             # slivers uses 4 as its flag value
-            self.failed_cell_sliver = np.count_nonzero(flag_grid == 4)
+            self.failed_cell_sliver = int(np.count_nonzero(flag_grid == 4))
         if self._sg_check_isolated:
             # isolated group uses 5 as its flag value
-            self.failed_cell_isolated_group = np.count_nonzero(flag_grid == 5)
+            self.failed_cell_isolated_group = int(np.count_nonzero(flag_grid == 5))
         # noisy edges uses 6 as its flag value
-        self.failed_cell_count_noisy_edges = np.count_nonzero(flag_grid == 6)
+        self.failed_cell_count_noisy_edges = int(np.count_nonzero(flag_grid == 6))
 
         if not (self.spatial_export or self.spatial_export_location):
             # if we don't generate spatial outputs, then there's no
