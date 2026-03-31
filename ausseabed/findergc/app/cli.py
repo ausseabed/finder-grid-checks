@@ -8,6 +8,7 @@
 import click
 import json
 import os
+import sys
 
 from ausseabed.mbesgc.app.cli import inputs_from_qajson
 from ausseabed.mbesgc.lib.data import get_input_details

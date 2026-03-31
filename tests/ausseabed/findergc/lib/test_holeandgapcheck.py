@@ -2,7 +2,6 @@ import numpy as np
 import numpy.ma as ma
 import unittest
 
-from scipy.ndimage import find_objects, label
 
 from ausseabed.qajson.model import QajsonParam
 from ausseabed.mbesgc.lib.data import InputFileDetails

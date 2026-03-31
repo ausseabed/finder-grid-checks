@@ -3,7 +3,7 @@ import unittest
 
 from scipy.ndimage import find_objects, label
 
-from ausseabed.qajson.model import QajsonParam, QajsonOutputs, QajsonExecution
+from ausseabed.qajson.model import QajsonParam
 from ausseabed.mbesgc.lib.data import InputFileDetails
 from ausseabed.mbesgc.lib.tiling import Tile
 from ausseabed.findergc.lib.holesgridcheck import HolesCheck
