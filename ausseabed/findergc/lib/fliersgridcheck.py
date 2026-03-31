@@ -137,7 +137,7 @@ class FliersCheck(GridCheck):
 
         depth_clone = depth.copy()
 
-        depth_clone.fill_value = np.NaN
+        depth_clone.fill_value = np.nan
         depth_clone = depth_clone.filled()
 
         # run the laplacian operator check
