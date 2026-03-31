@@ -384,7 +384,7 @@ packages:
   timestamp: 1773935801332
 - conda: .
   name: ausseabed-findergc
-  version: 0.1.1
+  version: 0.1.2
   build: pyh4616a5c_0
   subdir: noarch
   variants:
