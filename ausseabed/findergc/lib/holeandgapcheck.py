@@ -228,8 +228,8 @@ class HoleAndGapCheck(GridCheck):
         holes = (filled_labels == 9).astype(np.int8)
 
         # extract pixel counts
-        self.gap_pixels = np.count_nonzero(gaps)
-        self.hole_pixels = np.count_nonzero(holes)
+        self.gap_pixels = int(np.count_nonzero(gaps))
+        self.hole_pixels = int(np.count_nonzero(holes))
 
         self.gap_count, self.gap_hist = self.__calc_count_and_histogram(gaps)
         self.hole_count, self.hole_hist = self.__calc_count_and_histogram(holes)
