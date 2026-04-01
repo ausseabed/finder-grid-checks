@@ -127,7 +127,7 @@ def labeled_array_to_geojson(
     ogr_srs = osr.SpatialReference()
     ogr_srs.ImportFromWkt(ifd.projection)
 
-    ogr_driver = ogr.GetDriverByName('Memory')
+    ogr_driver = ogr.GetDriverByName('MEM')
     ogr_dataset = ogr_driver.CreateDataSource('shapemask')
     ogr_layer = ogr_dataset.CreateLayer('shapemask', srs=ogr_srs)
 
@@ -143,7 +143,7 @@ def labeled_array_to_geojson(
         callback=None
     )
 
-    ogr_simple_driver = ogr.GetDriverByName('Memory')
+    ogr_simple_driver = ogr.GetDriverByName('MEM')
     ogr_simple_dataset = ogr_simple_driver.CreateDataSource(
         'failed_poly')
     ogr_simple_layer = ogr_simple_dataset.CreateLayer(
@@ -165,8 +165,8 @@ def labeled_array_to_geojson(
         geojson_feature = geojson.loads(feature.ExportToJson())
         features.append(geojson_feature)
 
-    ogr_simple_dataset.Destroy()
-    ogr_dataset.Destroy()
+    ogr_simple_dataset.Close()
+    ogr_dataset.Close()
 
     return features
 
@@ -235,4 +235,4 @@ def save_raster_as_vector(
         callback=None
     )
 
-    ogr_dataset.Destroy()
+    ogr_dataset.Close()
