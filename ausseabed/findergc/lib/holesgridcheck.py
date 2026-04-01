@@ -227,7 +227,7 @@ class HolesCheck(GridCheck):
             )
 
             tile_ds = None
-            ogr_dataset.Destroy()
+            ogr_dataset.Close()
 
             spatial_detailed_stop = perf_counter()
             logger.debug(f"Holes raster export time = {spatial_detailed_stop - spatial_detailed_start:.4f}s")
